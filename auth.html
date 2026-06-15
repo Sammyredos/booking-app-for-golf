@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMJ GOLF Academy - Authentication</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+
+    <!-- OAuth Callback Pre-loader -->
+    <style>
+        .oauth-loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+        }
+
+        .oauth-loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #f3f4f6;
+            border-top-color: #000000;
+            border-radius: 50%;
+            animation: oauth-spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        .oauth-loading-text {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            color: #000000;
+        }
+
+        @keyframes oauth-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+    <script>
+        if (window.location.search.includes('oauth_callback') || window.location.search.includes('__clerk_status') || window.location.href.includes('__clerk_status')) {
+            document.write('<div class="oauth-loading-overlay"><div class="oauth-loading-spinner"></div><div class="oauth-loading-text" id="oauthLoadingText">Please wait...</div></div>');
+
+            // Cycle loading text
+            setTimeout(() => {
+                const loadingText = document.getElementById('oauthLoadingText');
+                if (loadingText) {
+                    const messages = [
+                        "Please wait... ",
+                        "Completing Sign In...",
+                        "Updating user information...",
+                        "Setting up your dashboard...",
+                        "Authenticating credentials...",
+                        "Almost there..."
+                    ];
+                    let i = 0;
+                    setInterval(() => {
+                        i = (i + 1) % messages.length;
+                        if (document.getElementById('oauthLoadingText')) {
+                            document.getElementById('oauthLoadingText').textContent = messages[i];
+                        }
+                    }, 2000);
+                }
+            }, 0);
+        }
+    </script>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <a href="index.html"><img src="assets/logo.png" alt="SMJ GOLF Logo"></a>
+            </div>
+            <nav class="nav" id="mobileNav" style="opacity: 0; transition: opacity 0.3s ease;">
+
+                <div class="nav-auth-section" id="navAuthSection" style="opacity: 0; pointer-events: none;">
+                    <a href="auth.html" class="btn btn-outline nav-login-btn" style="display: none;">Log In</a>
+                    <div class="user-dropdown-container" id="userDropdownContainer" style="display: none;">
+                        <button class="user-dropdown-toggle" id="userDropdownToggle" aria-expanded="false">
+                            <span class="user-avatar" id="userAvatar"></span>
+                            <span class="nav-user-name" id="userNameDisplay"></span>
+                            <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+
+                        <div class="user-dropdown-menu" id="userDropdownMenu">
+                            <a href="lessons.html" class="dropdown-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                </svg>
+                                My Lessons
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item text-danger nav-logout-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                                Log Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="auth-page">
+        <div class="auth-container">
+            <div class="auth-image" style="background-image: url('assets/hero_golf_course.png');">
+                <div class="auth-image-content">
+                    <h1>YOUR GAME,<br>ELEVATED.</h1>
+                    <p>Sign in to manage your lessons, track your progress, and book your next session.</p>
+                </div>
+            </div>
+            <div class="auth-form-wrapper">
+                <div class="auth-card">
+                    <!-- Login Form -->
+                    <div id="loginFormContainer" class="auth-form-container active">
+                        <h2>Welcome Back</h2>
+                        <p class="auth-subtitle">Log in to access your dashboard.</p>
+
+                        <button type="button" class="btn btn-oauth" id="googleLoginBtn">
+                            <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                    fill="#4285F4" />
+                                <path
+                                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                    fill="#34A853" />
+                                <path
+                                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                                    fill="#FBBC05" />
+                                <path
+                                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                    fill="#EA4335" />
+                            </svg>
+                            Continue with Google
+                        </button>
+
+                        <div class="auth-divider"><span>OR CONTINUE WITH EMAIL</span></div>
+
+                        <form class="auth-form" action="#" method="POST">
+                            <div class="form-group">
+                                <label for="loginEmail">Email Address</label>
+                                <input type="email" id="loginEmail" class="auth-input" placeholder="golfer@example.com"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="loginPassword">Password</label>
+                                <div class="password-wrapper">
+                                    <input type="password" id="loginPassword" class="auth-input" placeholder="••••••••"
+                                        required>
+                                    <button type="button" class="password-toggle"
+                                        aria-label="Toggle password visibility">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-options">
+                                <label class="checkbox-container">
+                                    <input type="checkbox">
+                                    <span class="checkmark"></span>
+                                    Remember me
+                                </label>
+                                <a href="#" class="forgot-link" id="showForgotBtn">Forgot password?</a>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+                        </form>
+
+                        <div class="auth-switch">
+                            <p>Don't have an account? <button class="switch-btn" id="showSignupBtn">Create one</button>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Sign Up Form -->
+                    <div id="signupFormContainer" class="auth-form-container" style="display: none;">
+                        <h2>Join the Academy</h2>
+                        <p class="auth-subtitle">Create an account to start booking lessons.</p>
+
+                        <button type="button" class="btn btn-oauth" id="googleSignupBtn">
+                            <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                    fill="#4285F4" />
+                                <path
+                                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                    fill="#34A853" />
+                                <path
+                                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                                    fill="#FBBC05" />
+                                <path
+                                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                    fill="#EA4335" />
+                            </svg>
+                            Sign up with Google
+                        </button>
+
+                        <div class="auth-divider"><span>OR CONTINUE WITH EMAIL</span></div>
+
+                        <form class="auth-form" id="signupFormElement" action="#" method="POST">
+                            <div class="form-group">
+                                <label for="signupName">Full Name</label>
+                                <input type="text" id="signupName" class="auth-input" placeholder="Tiger Woods"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="signupEmail">Email Address</label>
+                                <input type="email" id="signupEmail" class="auth-input" placeholder="golfer@example.com"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="signupPassword">Password</label>
+                                <div class="password-wrapper">
+                                    <input type="password" id="signupPassword" class="auth-input" placeholder="••••••••"
+                                        required>
+                                    <button type="button" class="password-toggle"
+                                        aria-label="Toggle password visibility">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="signupConfirmPassword">Confirm Password</label>
+                                <div class="password-wrapper">
+                                    <input type="password" id="signupConfirmPassword" class="auth-input"
+                                        placeholder="••••••••" required>
+                                    <button type="button" class="password-toggle"
+                                        aria-label="Toggle password visibility">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p id="passwordError"
+                                    style="color: #ef4444; font-size: 0.875rem; font-weight: 600; margin-top: 0.5rem; display: none;">
+                                    Passwords do not match.</p>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+                        </form>
+
+                        <div class="auth-switch">
+                            <p>Already have an account? <button class="switch-btn" id="showLoginBtn">Sign in</button>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Forgot Password Form -->
+                    <div id="forgotFormContainer" class="auth-form-container" style="display: none;">
+                        <h2>Reset Password</h2>
+                        <p class="auth-subtitle">Enter your email to receive a recovery link.</p>
+
+                        <form class="auth-form" action="#" method="POST">
+                            <div class="form-group">
+                                <label for="forgotEmail">Email Address</label>
+                                <input type="email" id="forgotEmail" class="auth-input" placeholder="golfer@example.com"
+                                    required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Send Reset Link</button>
+                        </form>
+
+                        <div class="auth-switch">
+                            <p>Remembered your password? <button class="switch-btn" id="backToLoginBtn">Sign in</button>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Verification Form (Signup OTP) -->
+                    <div id="verifyFormContainer" class="auth-form-container" style="display: none;">
+                        <h2>Check your email</h2>
+                        <p class="auth-subtitle">We sent a 6-digit verification code to your email address.</p>
+
+                        <form class="auth-form" id="verifyFormElement" action="#" method="POST">
+                            <div class="form-group">
+                                <label for="verifyCode">Verification Code</label>
+                                <input type="text" id="verifyCode" class="auth-input" placeholder="123456" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Verify Account</button>
+                        </form>
+                    </div>
+
+                    <!-- Reset Password Step 2 (Code + New Password) -->
+                    <div id="resetPasswordStep2Container" class="auth-form-container" style="display: none;">
+                        <h2>Create New Password</h2>
+                        <p class="auth-subtitle">Enter the code sent to your email and your new password.</p>
+
+                        <form class="auth-form" id="resetPasswordStep2Form" action="#" method="POST">
+                            <div class="form-group">
+                                <label for="resetCode">Verification Code</label>
+                                <input type="text" id="resetCode" class="auth-input" placeholder="123456" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <div class="password-wrapper">
+                                    <input type="password" id="newPassword" class="auth-input" placeholder="••••••••"
+                                        required>
+                                    <button type="button" class="password-toggle"
+                                        aria-label="Toggle password visibility">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Reset Password</button>
+                        </form>
+                        <div class="auth-switch">
+                            <p><button class="switch-btn" id="cancelResetBtn">Cancel</button></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Clerk Authentication SDK -->
+    <script defer crossorigin="anonymous"
+        src="https://helping-piglet-21.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js" type="text/javascript">
+        </script>
+    <script defer crossorigin="anonymous"
+        data-clerk-publishable-key="pk_test_aGVscGluZy1waWdsZXQtMjEuY2xlcmsuYWNjb3VudHMuZGV2JA"
+        src="https://helping-piglet-21.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
+        type="text/javascript">
+        </script>
+
+    <!-- Initialize Clerk -->
+    <script>
+        window.addEventListener('DOMContentLoaded', async function () {
+            try {
+                // Wait for Clerk to be defined if it's slightly delayed
+                const waitForClerk = () => new Promise(resolve => {
+                    if (window.Clerk) return resolve();
+                    const interval = setInterval(() => {
+                        if (window.Clerk) { clearInterval(interval); resolve(); }
+                    }, 50);
+                });
+
+                await waitForClerk();
+                await window.Clerk.load();
+                console.log('Clerk Auth Engine is loaded and ready!');
+
+                if (window.location.search.includes('oauth_callback') || window.location.search.includes('__clerk_status') || window.location.href.includes('__clerk_status')) {
+                    const basePath = window.location.pathname.replace('/auth.html', '');
+                    const redirectUrl = `${window.location.origin}${basePath}/lessons.html`;
+                    const redirectUrlLocal = 'lessons.html';
+                    try {
+                        await window.Clerk.handleRedirectCallback();
+                    } catch (err) {
+                        console.error('Redirect Callback Error:', err);
+                    }
+
+                    window.location.href = redirectUrlLocal;
+                    return;
+                }
+
+                // Fallback check
+                if (window.Clerk.user) {
+                    window.location.href = 'lessons.html';
+                } else {
+                    // Hide overlay if it didn't redirect
+                    const overlay = document.querySelector('.oauth-loading-overlay');
+                    if (overlay) overlay.style.display = 'none';
+
+                    // If there's a clerk error or missing requirements, show it
+                    if (window.Clerk.client.signUp && window.Clerk.client.signUp.status === 'missing_requirements') {
+                        window.showToaster && window.showToaster("Additional details required for sign up.", true);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load Clerk:', error);
+                const overlay = document.querySelector('.oauth-loading-overlay');
+                if (overlay) overlay.style.display = 'none';
+            }
+        });
+    </script>
+
+    <script src="main.js?v=639171258097249650"></script>
+    <script>
+        // Auth Flow Logic & Clerk Integration
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('smj_pending_booking')) {
+                setTimeout(() => {
+                    if (window.showToaster) {
+                        window.showToaster("Login to continue. Your selected plan has been saved!");
+                    }
+                }, 500);
+            }
+
+            // UI Containers
+            const loginForm = document.getElementById('loginFormContainer');
+            const signupForm = document.getElementById('signupFormContainer');
+            const forgotForm = document.getElementById('forgotFormContainer');
+            const verifyForm = document.getElementById('verifyFormContainer');
+            const resetStep2Form = document.getElementById('resetPasswordStep2Container');
+
+            // Buttons
+            const showSignupBtn = document.getElementById('showSignupBtn');
+            const showLoginBtn = document.getElementById('showLoginBtn');
+            const showForgotBtn = document.getElementById('showForgotBtn');
+            const backToLoginBtn = document.getElementById('backToLoginBtn');
+            const cancelResetBtn = document.getElementById('cancelResetBtn');
+
+            function showForm(formToShow) {
+                [loginForm, signupForm, forgotForm, verifyForm, resetStep2Form].forEach(f => {
+                    if (f) f.style.display = 'none';
+                });
+                if (formToShow) formToShow.style.display = 'block';
+            }
+
+            if (showSignupBtn) showSignupBtn.addEventListener('click', (e) => { e.preventDefault(); showForm(signupForm); });
+            if (showLoginBtn) showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); showForm(loginForm); });
+            if (showForgotBtn) showForgotBtn.addEventListener('click', (e) => { e.preventDefault(); showForm(forgotForm); });
+            if (backToLoginBtn) backToLoginBtn.addEventListener('click', (e) => { e.preventDefault(); showForm(loginForm); });
+            if (cancelResetBtn) cancelResetBtn.addEventListener('click', (e) => { e.preventDefault(); showForm(loginForm); });
+
+            // Google OAuth Flow
+            const googleLoginBtn = document.getElementById('googleLoginBtn');
+            const googleSignupBtn = document.getElementById('googleSignupBtn');
+
+            if (googleLoginBtn) {
+                googleLoginBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    googleLoginBtn.classList.add('loading');
+                    const basePath = window.location.pathname.replace('/auth.html', '');
+                    const redirectUrl = localStorage.getItem('smj_pending_booking') ? `${window.location.origin}${basePath}/index.html` : `${window.location.origin}${basePath}/lessons.html`;
+                    window.Clerk.client.signIn.authenticateWithRedirect({
+                        strategy: 'oauth_google',
+                        redirectUrl: `${window.location.origin}${window.location.pathname}?oauth_callback=true`
+                    });
+                });
+            }
+
+            if (googleSignupBtn) {
+                googleSignupBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    googleSignupBtn.classList.add('loading');
+                    const basePath = window.location.pathname.replace('/auth.html', '');
+                    const redirectUrl = localStorage.getItem('smj_pending_booking') ? `${window.location.origin}${basePath}/index.html` : `${window.location.origin}${basePath}/lessons.html`;
+                    window.Clerk.client.signIn.authenticateWithRedirect({
+                        strategy: 'oauth_google',
+                        redirectUrl: `${window.location.origin}${window.location.pathname}?oauth_callback=true`
+                    });
+                });
+            }
+
+            // Password Match Validation
+            const signupFormElement = document.getElementById('signupFormElement');
+            const signupPassword = document.getElementById('signupPassword');
+            const signupConfirmPassword = document.getElementById('signupConfirmPassword');
+            const passwordError = document.getElementById('passwordError');
+
+            if (signupFormElement) {
+                signupFormElement.addEventListener('submit', async (e) => {
+                    e.preventDefault(); // Stop default form submission
+
+                    if (signupPassword.value !== signupConfirmPassword.value) {
+                        passwordError.style.display = 'block';
+                        signupConfirmPassword.style.borderColor = '#ef4444';
+                        return;
+                    }
+
+                    passwordError.style.display = 'none';
+                    signupConfirmPassword.style.borderColor = 'var(--text-dark)';
+
+                    // --- Clerk Sign Up Logic ---
+                    const btn = e.target.querySelector('button[type="submit"]');
+                    btn.classList.add('loading');
+                    try {
+                        const emailAddress = document.getElementById('signupEmail').value;
+                        const fullName = document.getElementById('signupName').value;
+                        const password = signupPassword.value;
+
+                        // 1. Create User
+                        await window.Clerk.client.signUp.create({
+                            emailAddress,
+                            password,
+                            firstName: fullName
+                        });
+
+                        // 2. Start Email Verification
+                        await window.Clerk.client.signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+
+                        // 3. Show Verification UI
+                        showForm(verifyForm);
+                        window.showToaster("Verification code sent to email!");
+
+                    } catch (err) {
+                        window.showToaster(err.errors?.[0]?.message || "Sign up failed", true);
+                    } finally {
+                        btn.classList.remove('loading');
+                    }
+                });
+
+                if (signupConfirmPassword) {
+                    signupConfirmPassword.addEventListener('input', () => {
+                        passwordError.style.display = 'none';
+                        signupConfirmPassword.style.borderColor = 'var(--text-dark)';
+                    });
+                }
+            }
+
+            // --- Clerk OTP Verify Logic ---
+            const verifyFormElement = document.getElementById('verifyFormElement');
+            if (verifyFormElement) {
+                verifyFormElement.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = e.target.querySelector('button[type="submit"]');
+                    btn.classList.add('loading');
+                    try {
+                        const code = document.getElementById('verifyCode').value;
+                        const completeSignUp = await window.Clerk.client.signUp.attemptEmailAddressVerification({ code });
+
+                        if (completeSignUp.status === 'complete') {
+                            await window.Clerk.setActive({ session: completeSignUp.createdSessionId });
+                            window.showToaster("Welcome to SMJ Golf Academy!");
+                            setTimeout(() => { window.location.href = localStorage.getItem('smj_pending_booking') ? "index.html" : "lessons.html"; }, 1500);
+                        } else {
+                            window.showToaster("Verification incomplete.", true);
+                        }
+                    } catch (err) {
+                        window.showToaster(err.errors?.[0]?.message || "Invalid code", true);
+                    } finally {
+                        btn.classList.remove('loading');
+                    }
+                });
+            }
+
+            // --- Clerk Sign In Logic ---
+            const loginFormElement = loginForm.querySelector('form');
+            if (loginFormElement) {
+                loginFormElement.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = e.target.querySelector('button[type="submit"]');
+                    btn.classList.add('loading');
+                    try {
+                        const identifier = document.getElementById('loginEmail').value;
+                        const password = document.getElementById('loginPassword').value;
+
+                        const result = await window.Clerk.client.signIn.create({
+                            identifier,
+                            password
+                        });
+
+                        if (result.status === 'complete') {
+                            await window.Clerk.setActive({ session: result.createdSessionId });
+                            window.showToaster("Logged in successfully!");
+                            setTimeout(() => { window.location.href = "lessons.html"; }, 1500);
+                        }
+                    } catch (err) {
+                        window.showToaster(err.errors?.[0]?.message || "Invalid email or password", true);
+                    } finally {
+                        btn.classList.remove('loading');
+                    }
+                });
+            }
+
+            // --- Clerk Forgot Password Logic ---
+            const forgotFormElement = forgotForm.querySelector('form');
+            if (forgotFormElement) {
+                forgotFormElement.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = e.target.querySelector('button[type="submit"]');
+                    btn.classList.add('loading');
+                    try {
+                        const identifier = document.getElementById('forgotEmail').value;
+                        await window.Clerk.client.signIn.create({
+                            strategy: 'reset_password_email_code',
+                            identifier
+                        });
+                        showForm(resetStep2Form);
+                        window.showToaster("Reset code sent to email!");
+                    } catch (err) {
+                        window.showToaster(err.errors?.[0]?.message || "Error sending reset code", true);
+                    } finally {
+                        btn.classList.remove('loading');
+                    }
+                });
+            }
+
+            const resetStep2FormElement = document.getElementById('resetPasswordStep2Form');
+            if (resetStep2FormElement) {
+                resetStep2FormElement.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = e.target.querySelector('button[type="submit"]');
+                    btn.classList.add('loading');
+                    try {
+                        const code = document.getElementById('resetCode').value;
+                        const password = document.getElementById('newPassword').value;
+
+                        const result = await window.Clerk.client.signIn.attemptFirstFactor({
+                            strategy: 'reset_password_email_code',
+                            code,
+                            password
+                        });
+
+                        if (result.status === 'complete') {
+                            await window.Clerk.setActive({ session: result.createdSessionId });
+                            window.showToaster("Password reset successfully!");
+                            setTimeout(() => { window.location.href = localStorage.getItem('smj_pending_booking') ? "index.html" : "lessons.html"; }, 1500);
+                        }
+                    } catch (err) {
+                        window.showToaster(err.errors?.[0]?.message || "Invalid code or password", true);
+                    } finally {
+                        btn.classList.remove('loading');
+                    }
+                });
+            }
+
+            // Password Visibility Toggle
+            const toggleButtons = document.querySelectorAll('.password-toggle');
+            toggleButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const input = btn.previousElementSibling;
+                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                    input.setAttribute('type', type);
+
+                    if (type === 'text') {
+                        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-off-icon"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+                    } else {
+                        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
