@@ -1,6 +1,6 @@
 <?php
 // Database configuration
-$host = "localhost";
+$host = "p:localhost"; // Using persistent connection to act as connection pooling
 $username = "root"; // Update this with your cPanel MySQL username
 $password = "";     // Update this with your cPanel MySQL password
 $dbname = "smj_golf"; // Update this with your cPanel Database Name

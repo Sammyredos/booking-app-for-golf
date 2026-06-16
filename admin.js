@@ -43,8 +43,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     function parseDurationMins(planName) {
         if (!planName) return 60;
         const p = planName.toLowerCase();
-        if (p.includes('nine holes')) return 120;
-        if (p.includes('18 holes')) return 240;
+        if (p.includes('nine holes') || p.includes('9 holes')) return 150;
+        if (p.includes('18 holes')) return 300;
+        if (p.includes('outside ikoyi')) return 1440;
         if (p.includes('simulator')) return 120;
         return 60;
     }
@@ -71,19 +72,35 @@ document.addEventListener('DOMContentLoaded', async () => {
             String(b.id) !== String(currentBookingId)
         );
 
-        const blockedRanges = todaysBookings.map(b => {
-            const startMins = parseTimeStr(b.booking_time);
-            const durationMins = parseDurationMins(b.plan_name);
-            return {
-                start: startMins - GLOBAL_BUFFER_BEFORE,
-                end: startMins + durationMins + GLOBAL_BUFFER_AFTER
-            };
-        });
+        const isCandidateFullDay = (currentPlanDuration >= 1440);
+        const hasExistingFullDay = todaysBookings.some(b => parseDurationMins(b.plan_name) >= 1440);
+
+        const blockedRanges = [];
+        if ((isCandidateFullDay && todaysBookings.length > 0) || hasExistingFullDay) {
+            blockedRanges.push({ start: -9999, end: 9999 });
+        } else {
+            todaysBookings.forEach(b => {
+                const startMins = parseTimeStr(b.booking_time);
+                const durationMins = parseDurationMins(b.plan_name);
+                blockedRanges.push({
+                    start: startMins - GLOBAL_BUFFER_BEFORE,
+                    end: startMins + durationMins + GLOBAL_BUFFER_AFTER
+                });
+            });
+        }
 
         let allCandidates = [...GLOBAL_STANDARD_SLOTS];
         blockedRanges.forEach(range => {
-            if (range.end >= GLOBAL_SCHEDULE_START && range.end <= GLOBAL_SCHEDULE_END && !allCandidates.includes(range.end)) {
-                allCandidates.push(range.end);
+            // The exact slot AFTER this booking:
+            let afterCandidate = range.end + GLOBAL_BUFFER_BEFORE;
+            if (afterCandidate >= GLOBAL_SCHEDULE_START && afterCandidate <= GLOBAL_SCHEDULE_END && !allCandidates.includes(afterCandidate)) {
+                allCandidates.push(afterCandidate);
+            }
+            
+            // The exact slot BEFORE this booking:
+            let beforeCandidate = range.start - currentPlanDuration - GLOBAL_BUFFER_AFTER;
+            if (beforeCandidate >= GLOBAL_SCHEDULE_START && beforeCandidate <= GLOBAL_SCHEDULE_END && !allCandidates.includes(beforeCandidate)) {
+                allCandidates.push(beforeCandidate);
             }
         });
         allCandidates.sort((a, b) => a - b);
@@ -95,9 +112,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         allCandidates.forEach(slotStart => {
             const slotEnd = slotStart + currentPlanDuration; 
+            const cStart = slotStart - GLOBAL_BUFFER_BEFORE;
+            const cEnd = slotEnd + GLOBAL_BUFFER_AFTER;
+
             let isOverlapping = false;
             for (let range of blockedRanges) {
-                if (slotStart < range.end && slotEnd > range.start) {
+                if (cStart < range.end && cEnd > range.start) {
                     isOverlapping = true;
                     break;
                 }

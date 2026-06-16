@@ -846,11 +846,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.initCalendar = initCalendar;
     
     function parseDurationMins(planName) {
+        if (!planName) return 60;
         planName = planName.toLowerCase();
-        if (planName.includes('nine holes')) return 150; // 2.5 hours
+        if (planName.includes('nine holes') || planName.includes('9 holes')) return 150; // 2.5 hours
         if (planName.includes('18 holes')) return 300; // 5 hours (matches UI 300 mins)
         if (planName.includes('outside ikoyi')) return 1440; // 24 hours (Full Day)
-        if (planName.includes('simulator')) return 60; 
+        if (planName.includes('simulator')) return 120; // Match admin.js and bookings.php
         return 60; // Default 1 hour
     }
 
@@ -922,36 +923,59 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.warn('Could not load dynamic schedule, using defaults');
         }
         
-        const blockedRanges = todaysBookings.map(b => {
-            const startMins = timeToMins(b.booking_time);
-            const durationMins = parseDurationMins(b.plan_name);
-            return { start: startMins - bufferBefore, end: startMins + durationMins + bufferAfter };
-        });
+        const currentPlanName = document.getElementById('bookingPlanTitle') ? document.getElementById('bookingPlanTitle').textContent : '';
+        const currentPlanDuration = parseDurationMins(currentPlanName);
+        const requiredMins = currentPlanDuration;
+        const isCandidateFullDay = (currentPlanDuration >= 1440);
+        const hasExistingFullDay = todaysBookings.some(b => parseDurationMins(b.plan_name) >= 1440);
+
+        const blockedRanges = [];
+        if ((isCandidateFullDay && todaysBookings.length > 0) || hasExistingFullDay) {
+            blockedRanges.push({ start: -9999, end: 9999 });
+        } else {
+            todaysBookings.forEach(b => {
+                const startMins = timeToMins(b.booking_time);
+                const durationMins = parseDurationMins(b.plan_name);
+                blockedRanges.push({ start: startMins - bufferBefore, end: startMins + durationMins + bufferAfter });
+            });
+        }
 
         let allCandidates = [...STANDARD_SLOTS];
 
         blockedRanges.forEach(range => {
-            if (range.end >= schedStartMins && range.end <= schedEndMins && !allCandidates.includes(range.end)) {
-                allCandidates.push(range.end);
+            // range.start is already E_start - bufferBefore
+            // range.end is already E_end + bufferAfter
+            
+            // The exact slot AFTER this booking:
+            // C_start - bufferBefore = range.end  =>  C_start = range.end + bufferBefore
+            let afterCandidate = range.end + bufferBefore;
+            if (afterCandidate >= schedStartMins && afterCandidate <= schedEndMins && !allCandidates.includes(afterCandidate)) {
+                allCandidates.push(afterCandidate);
+            }
+            
+            // The exact slot BEFORE this booking:
+            // C_end + bufferAfter = range.start  =>  C_start + duration + bufferAfter = range.start
+            // C_start = range.start - requiredMins - bufferAfter
+            let beforeCandidate = range.start - requiredMins - bufferAfter;
+            if (beforeCandidate >= schedStartMins && beforeCandidate <= schedEndMins && !allCandidates.includes(beforeCandidate)) {
+                allCandidates.push(beforeCandidate);
             }
         });
 
         allCandidates.sort((a, b) => a - b);
 
-        const currentPlanName = document.getElementById('bookingPlanTitle') ? document.getElementById('bookingPlanTitle').textContent : '';
-        const currentPlanDuration = parseDurationMins(currentPlanName);
-        // We only require the actual duration to fit. The buffer will push out *subsequent* bookings.
-        const requiredMins = currentPlanDuration;
 
         timeList.innerHTML = '';
         let hasAvailableSlots = false;
         
         allCandidates.forEach(slotStart => {
             const slotEnd = slotStart + requiredMins;
+            const cStart = slotStart - bufferBefore;
+            const cEnd = slotEnd + bufferAfter;
             
             let isBlocked = false;
             for (let range of blockedRanges) {
-                if (slotStart < range.end && slotEnd > range.start) {
+                if (cStart < range.end && cEnd > range.start) {
                     isBlocked = true;
                     break;
                 }
@@ -1035,7 +1059,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 method = 'PUT';
                 payload = {
                     id: window.smjRescheduleMode.id,
-                    booking_date: selectedDate.toISOString().split('T')[0],
+                    booking_date: new Date(selectedDate.getTime() - (selectedDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0],
                     booking_time: selectedTime
                 };
             } else {
@@ -1045,7 +1069,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     user_name: fullName,
                     coach_name: document.getElementById('bookingPlanTitle').textContent.includes('Kids') ? 'Balogun Jacob Micheal' : 'Balogun Jacob Micheal',
                     plan_name: document.getElementById('bookingPlanTitle').textContent,
-                    booking_date: selectedDate.toISOString().split('T')[0],
+                    booking_date: new Date(selectedDate.getTime() - (selectedDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0],
                     booking_time: selectedTime,
                     payment_method: selectedPaymentMethod || 'cash'
                 };

@@ -6,7 +6,7 @@
 require_once __DIR__ . '/config.php';
 
 // Fetch pending emails
-$stmt = $conn->prepare("SELECT * FROM email_queue WHERE status = 'pending' LIMIT 50");
+$stmt = $conn->prepare("SELECT id, user_id, user_email, subject, message FROM email_queue WHERE status = 'pending' LIMIT 50");
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -30,6 +30,9 @@ if ($res && $row = $res->fetch_assoc()) {
 $successCount = 0;
 $failCount = 0;
 
+$sentIds = [];
+$failedIds = [];
+
 foreach ($pendingEmails as $emailTask) {
     $to = $emailTask['user_email'];
     $subject = "SMJ Golf Academy: " . $emailTask['subject'];
@@ -45,19 +48,24 @@ foreach ($pendingEmails as $emailTask) {
     $mailSent = @mail($to, $subject, $message, $headers);
 
     if ($mailSent) {
-        $updateStmt = $conn->prepare("UPDATE email_queue SET status = 'sent' WHERE id = ?");
-        $updateStmt->bind_param("i", $emailTask['id']);
-        $updateStmt->execute();
-        $updateStmt->close();
+        $sentIds[] = $emailTask['id'];
         $successCount++;
     } else {
         // If mail fails, mark as failed so it doesn't get stuck forever
-        $updateStmt = $conn->prepare("UPDATE email_queue SET status = 'failed' WHERE id = ?");
-        $updateStmt->bind_param("i", $emailTask['id']);
-        $updateStmt->execute();
-        $updateStmt->close();
+        $failedIds[] = $emailTask['id'];
         $failCount++;
     }
+}
+
+// Batch update statuses
+if (!empty($sentIds)) {
+    $ids_str = implode(',', array_map('intval', $sentIds));
+    $conn->query("UPDATE email_queue SET status = 'sent' WHERE id IN ($ids_str)");
+}
+
+if (!empty($failedIds)) {
+    $ids_str = implode(',', array_map('intval', $failedIds));
+    $conn->query("UPDATE email_queue SET status = 'failed' WHERE id IN ($ids_str)");
 }
 
 echo "Processed " . count($pendingEmails) . " emails. Success: $successCount, Failed: $failCount.\n";

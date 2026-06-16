@@ -15,9 +15,13 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
     case 'GET':
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $limit = isset($_GET['limit']) ? max(1, (int)$_GET['limit']) : 100;
+        $offset = ($page - 1) * $limit;
+        
         // 1. Fetch Users from Clerk API
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, "https://api.clerk.com/v1/users?limit=100");
+        curl_setopt($ch, CURLOPT_URL, "https://api.clerk.com/v1/users?limit={$limit}&offset={$offset}");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             "Authorization: Bearer " . $CLERK_SECRET_KEY,

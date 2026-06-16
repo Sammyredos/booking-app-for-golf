@@ -102,20 +102,105 @@ function isWithinCancellationWindow($conn, $booking_date, $booking_time) {
     return $diff <= $window_seconds;
 }
 
-function isWithinAdvanceBookingLimit($conn, $booking_date) {
-    // Fetch advance booking limit from settings
-    $res = $conn->query("SELECT setting_value FROM app_settings WHERE setting_key = 'advance_booking_days'");
-    $limit = 60; // default
-    if ($res && $row = $res->fetch_assoc()) {
-        $limit = intval($row['setting_value']);
+function isWithinAdvanceBookingLimit($conn, $bookingDate) {
+    $stmt = $conn->query("SELECT setting_value FROM app_settings WHERE setting_key = 'advance_booking_days'");
+    $advanceDays = 30; // Default
+    if ($stmt && $row = $stmt->fetch_assoc()) {
+        $advanceDays = (int)$row['setting_value'];
     }
     
-    date_default_timezone_set('Africa/Lagos');
-    $target_date = strtotime($booking_date);
-    $today = strtotime(date('Y-m-d'));
-    $diff_days = ($target_date - $today) / (60 * 60 * 24);
+    $today = new DateTime('today');
+    $bDate = new DateTime($bookingDate);
+    $diff = $today->diff($bDate)->days;
+    $invert = $today->diff($bDate)->invert;
     
-    return $diff_days <= $limit;
+    if ($invert) return false; // Past date
+    return $diff <= $advanceDays;
+}
+
+// Helper functions for overlap checking
+function getPlanDurationMins($planName) {
+    if (!$planName) return 60;
+    $p = strtolower($planName);
+    if (strpos($p, 'nine holes') !== false || strpos($p, '9 holes') !== false) return 150;
+    if (strpos($p, '18 holes') !== false) return 300;
+    if (strpos($p, 'outside ikoyi') !== false) return 1440;
+    if (strpos($p, 'simulator') !== false) return 120;
+    return 60;
+}
+
+function timeToMins($timeStr) {
+    if (!$timeStr) return 0;
+    $parts = explode(' ', $timeStr);
+    $time = $parts[0];
+    $mod = isset($parts[1]) ? $parts[1] : '';
+    $t = explode(':', $time);
+    $h = (int)$t[0];
+    $m = isset($t[1]) ? (int)$t[1] : 0;
+    if ($mod === 'PM' && $h < 12) $h += 12;
+    if ($mod === 'AM' && $h === 12) $h = 0;
+    return $h * 60 + $m;
+}
+
+function checkOverlap($conn, $coachName, $bookingDate, $bookingTime, $planName, $excludeId = null) {
+    $stmt = $conn->query("SELECT setting_key, setting_value FROM app_settings WHERE setting_key IN ('buffer_before', 'buffer_after')");
+    $bufferBefore = 10;
+    $bufferAfter = 10;
+    if ($stmt) {
+        while ($row = $stmt->fetch_assoc()) {
+            if ($row['setting_key'] === 'buffer_before') $bufferBefore = (int)$row['setting_value'];
+            if ($row['setting_key'] === 'buffer_after') $bufferAfter = (int)$row['setting_value'];
+        }
+    }
+
+    $cStart = timeToMins($bookingTime);
+    $cEnd = $cStart + getPlanDurationMins($planName);
+    
+    // Absolute candidate timestamps
+    $cTimestampStart = strtotime($bookingDate . ' 00:00:00') + ($cStart * 60);
+    $cTimestampEnd = strtotime($bookingDate . ' 00:00:00') + ($cEnd * 60);
+    
+    $cTotalStart = $cTimestampStart - ($bufferBefore * 60);
+    $cTotalEnd = $cTimestampEnd + ($bufferAfter * 60);
+
+    $isCandidateFullDay = (($cEnd - $cStart) >= 1440);
+
+    $query = "SELECT id, booking_date, booking_time, plan_name FROM bookings WHERE coach_name = ? AND status != 'cancelled'";
+    if ($excludeId !== null) {
+        $query .= " AND id != ?";
+    }
+    
+    $stmt = $conn->prepare($query);
+    if ($excludeId !== null) {
+        $stmt->bind_param("si", $coachName, $excludeId);
+    } else {
+        $stmt->bind_param("s", $coachName);
+    }
+    
+    $stmt->execute();
+    $res = $stmt->get_result();
+    
+    while ($row = $res->fetch_assoc()) {
+        $eDuration = getPlanDurationMins($row['plan_name']);
+        $isExistingFullDay = ($eDuration >= 1440);
+
+        // If either is a full day, and they are on the exact same calendar date, it's an immediate conflict.
+        if (($isCandidateFullDay || $isExistingFullDay) && $row['booking_date'] === $bookingDate) {
+            $stmt->close();
+            return true;
+        }
+
+        $eStartMins = timeToMins($row['booking_time']);
+        $eTimestampStart = strtotime($row['booking_date'] . ' 00:00:00') + ($eStartMins * 60);
+        $eTimestampEnd = $eTimestampStart + ($eDuration * 60);
+        
+        if ($cTotalStart < $eTimestampEnd && $cTotalEnd > $eTimestampStart) {
+            $stmt->close();
+            return true;
+        }
+    }
+    $stmt->close();
+    return false;
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -124,13 +209,19 @@ switch ($method) {
     case 'GET':
         // If user_id is provided, fetch for that user. Otherwise fetch all (for admin).
         $userId = isset($_GET['user_id']) ? $_GET['user_id'] : null;
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $limit = isset($_GET['limit']) ? max(1, (int)$_GET['limit']) : 1000;
+        $offset = ($page - 1) * $limit;
+        
+        $selectCols = "id, user_id, user_name, coach_name, plan_name, booking_date, booking_time, payment_method, payment_reference, status, created_at";
         
         if ($userId) {
-            $stmt = $conn->prepare("SELECT * FROM bookings WHERE user_id = ? ORDER BY booking_date DESC, booking_time DESC");
-            $stmt->bind_param("s", $userId);
+            $stmt = $conn->prepare("SELECT $selectCols FROM bookings WHERE user_id = ? ORDER BY booking_date DESC, booking_time DESC LIMIT ? OFFSET ?");
+            $stmt->bind_param("sii", $userId, $limit, $offset);
         } else {
             // Admin fetching all
-            $stmt = $conn->prepare("SELECT * FROM bookings ORDER BY booking_date DESC, booking_time DESC");
+            $stmt = $conn->prepare("SELECT $selectCols FROM bookings ORDER BY booking_date DESC, booking_time DESC LIMIT ? OFFSET ?");
+            $stmt->bind_param("ii", $limit, $offset);
         }
         
         $stmt->execute();
@@ -213,17 +304,11 @@ switch ($method) {
             }
         }
 
-        // Timing logic: Check for existing booking for the same coach, date, and time
-        $stmt_check = $conn->prepare("SELECT id FROM bookings WHERE coach_name = ? AND booking_date = ? AND booking_time = ? AND status != 'cancelled'");
-        $stmt_check->bind_param("sss", $data['coach_name'], $data['booking_date'], $data['booking_time']);
-        $stmt_check->execute();
-        $stmt_check->store_result();
-        if ($stmt_check->num_rows > 0) {
+        // Timing logic: Check for overlap accounting for duration and buffers
+        if (checkOverlap($conn, $data['coach_name'], $data['booking_date'], $data['booking_time'], $data['plan_name'])) {
             echo json_encode(["status" => "error", "message" => "Time slot unavailable. The coach is already booked for this time."]);
-            $stmt_check->close();
             exit;
         }
-        $stmt_check->close();
         
         $stmt = $conn->prepare("INSERT INTO bookings (user_id, user_name, coach_name, plan_name, booking_date, booking_time, payment_method, payment_reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("ssssssss", $data['user_id'], $data['user_name'], $data['coach_name'], $data['plan_name'], $data['booking_date'], $data['booking_time'], $paymentMethod, $paymentReference);
@@ -248,7 +333,7 @@ switch ($method) {
             exit;
         }
 
-        $stmt_get = $conn->prepare("SELECT * FROM bookings WHERE id = ?");
+        $stmt_get = $conn->prepare("SELECT id, user_id, user_name, coach_name, plan_name, booking_date, booking_time, status, created_at FROM bookings WHERE id = ?");
         $stmt_get->bind_param("i", $data['id']);
         $stmt_get->execute();
         $res = $stmt_get->get_result();
@@ -265,16 +350,10 @@ switch ($method) {
         // Check for full edit first
         if (isset($data['user_name']) && isset($data['coach_name']) && isset($data['plan_name']) && isset($data['booking_date']) && isset($data['booking_time']) && isset($data['status'])) {
             // Timing logic: check conflict if modifying date/time/coach
-            $stmt_check = $conn->prepare("SELECT id FROM bookings WHERE coach_name = ? AND booking_date = ? AND booking_time = ? AND id != ? AND status != 'cancelled'");
-            $stmt_check->bind_param("sssi", $data['coach_name'], $data['booking_date'], $data['booking_time'], $data['id']);
-            $stmt_check->execute();
-            $stmt_check->store_result();
-            if ($stmt_check->num_rows > 0) {
+            if (checkOverlap($conn, $data['coach_name'], $data['booking_date'], $data['booking_time'], $data['plan_name'], $data['id'])) {
                 echo json_encode(["status" => "error", "message" => "Time slot unavailable. The coach is already booked for this time."]);
-                $stmt_check->close();
                 exit;
             }
-            $stmt_check->close();
 
             $stmt = $conn->prepare("UPDATE bookings SET user_name = ?, coach_name = ?, plan_name = ?, booking_date = ?, booking_time = ?, status = ? WHERE id = ?");
             $stmt->bind_param("ssssssi", $data['user_name'], $data['coach_name'], $data['plan_name'], $data['booking_date'], $data['booking_time'], $data['status'], $data['id']);
@@ -293,23 +372,16 @@ switch ($method) {
                 exit;
             }
             // Get the current coach to do conflict checking
-            $stmt_get = $conn->prepare("SELECT coach_name FROM bookings WHERE id = ?");
+            $stmt_get = $conn->prepare("SELECT coach_name, plan_name FROM bookings WHERE id = ?");
             $stmt_get->bind_param("i", $data['id']);
             $stmt_get->execute();
             $res = $stmt_get->get_result();
             if ($row = $res->fetch_assoc()) {
-                $coach = $row['coach_name'];
-                $stmt_check = $conn->prepare("SELECT id FROM bookings WHERE coach_name = ? AND booking_date = ? AND booking_time = ? AND id != ? AND status != 'cancelled'");
-                $stmt_check->bind_param("sssi", $coach, $data['booking_date'], $data['booking_time'], $data['id']);
-                $stmt_check->execute();
-                $stmt_check->store_result();
-                if ($stmt_check->num_rows > 0) {
+                if (checkOverlap($conn, $row['coach_name'], $data['booking_date'], $data['booking_time'], $row['plan_name'], $data['id'])) {
                     echo json_encode(["status" => "error", "message" => "Time slot unavailable. The coach is already booked for this time."]);
-                    $stmt_check->close();
                     $stmt_get->close();
                     exit;
                 }
-                $stmt_check->close();
             }
             $stmt_get->close();
 
@@ -348,7 +420,7 @@ switch ($method) {
             exit;
         }
         
-        $stmt_get = $conn->prepare("SELECT * FROM bookings WHERE id = ?");
+        $stmt_get = $conn->prepare("SELECT id, user_id, user_name, coach_name, plan_name, booking_date, booking_time, status, created_at FROM bookings WHERE id = ?");
         $stmt_get->bind_param("i", $data['id']);
         $stmt_get->execute();
         $res = $stmt_get->get_result();
