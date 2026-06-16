@@ -392,14 +392,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                     data: Object.values(planCounts),
                     backgroundColor: ['#ccff00', '#0b1319', '#f4f4f4', '#888', '#333', '#ddd'],
                     borderWidth: 2,
-                    borderColor: '#fff'
+                    borderColor: '#fff',
+                    hoverOffset: 4
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '65%',
+                layout: {
+                    padding: {
+                        bottom: 10
+                    }
+                },
                 plugins: {
-                    legend: { position: 'bottom' }
+                    legend: { 
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                family: "'Space Grotesk', sans-serif",
+                                size: 11
+                            },
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            boxWidth: 8
+                        }
+                    }
                 }
             }
         });
