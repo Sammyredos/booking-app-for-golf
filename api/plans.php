@@ -32,6 +32,9 @@ switch ($method) {
         break;
 
     case 'POST':
+        require_once 'verify_auth.php';
+        $auth = verifyAuth(true); // Admin only
+
         $data = json_decode(file_get_contents("php://input"), true);
         
         if (!isset($data['category'], $data['title'], $data['price'], $data['duration'], $data['features'])) {
@@ -54,6 +57,9 @@ switch ($method) {
         break;
 
     case 'DELETE':
+        require_once 'verify_auth.php';
+        $auth = verifyAuth(true); // Admin only
+
         $data = json_decode(file_get_contents("php://input"), true);
         
         if (!isset($data['id'])) {
@@ -73,6 +79,9 @@ switch ($method) {
         break;
 
     case 'PUT':
+        require_once 'verify_auth.php';
+        $auth = verifyAuth(true); // Admin only
+
         $data = json_decode(file_get_contents("php://input"), true);
         
         if (!isset($data['id'], $data['category'], $data['title'], $data['price'], $data['duration'], $data['features'])) {

@@ -17,6 +17,14 @@ if (empty($user_id)) {
     exit;
 }
 
+require_once 'verify_auth.php';
+$auth = verifyAuth();
+if ($user_id !== $auth['user_id'] && !$auth['is_admin']) {
+    http_response_code(403);
+    echo json_encode(["status" => "error", "message" => "Forbidden: You can only view your own limits"]);
+    exit;
+}
+
 // 1. Fetch all plans that have limits defined
 $limits = [];
 $max_validity = 0;

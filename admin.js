@@ -1,3 +1,22 @@
+
+// Helper function for authenticated API calls
+window.apiFetch = async function(url, options = {}) {
+    if (window.Clerk && window.Clerk.session) {
+        try {
+            const token = await window.Clerk.session.getToken();
+            if (token) {
+                options.headers = {
+                    ...options.headers,
+                    'Authorization': `Bearer ${token}`
+                };
+            }
+        } catch(e) {
+            console.warn('Failed to get Clerk token', e);
+        }
+    }
+    return fetch(url, options);
+};
+
 let GLOBAL_SCHEDULE_START = 9 * 60;
 let GLOBAL_SCHEDULE_END = 16 * 60;
 let GLOBAL_BUFFER_BEFORE = 10;
@@ -7,7 +26,7 @@ let GLOBAL_STANDARD_SLOTS = [9*60, 9*60+30, 10*60, 10*60+30, 11*60, 11*60+30, 12
 document.addEventListener('DOMContentLoaded', async () => {
     // Load Global Schedule Settings
     try {
-        const res = await fetch('api/settings.php');
+        const res = await window.apiFetch('api/settings.php');
         const text = await res.text();
         const data = JSON.parse(text);
         if (data.status === 'success' && data.data) {
@@ -267,7 +286,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function fetchGlobalClerkUsers() {
         try {
-            const res = await fetch('api/users.php');
+            const res = await window.apiFetch('api/users.php');
             const data = await res.json();
             if (data.status === 'success') {
                 return data.data;
@@ -490,7 +509,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function fetchAdminBookings(silent = false) {
         try {
-            const res = await fetch('api/bookings.php');
+            const res = await window.apiFetch('api/bookings.php');
             const text = await res.text();
             let data;
             try {
@@ -687,7 +706,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             confirmDeleteBtn.classList.add('loading');
             
             try {
-                const res = await fetch('api/bookings.php', {
+                const res = await window.apiFetch('api/bookings.php', {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: bookingToDeleteId, isAdmin: true })
@@ -768,7 +787,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     searchInput.placeholder = 'Search ' + allClerkUsers.length + ' registered golfers...';
                 } else {
                     try {
-                        const res = await fetch('api/users.php');
+                        const res = await window.apiFetch('api/users.php');
                         const data = await res.json();
                         if (data.status === 'success') {
                             window.globalClerkUsers = data.data;
@@ -862,7 +881,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
 
             try {
-                const res = await fetch('api/bookings.php', {
+                const res = await window.apiFetch('api/bookings.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -926,7 +945,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             try {
-                const res = await fetch('api/bookings.php', {
+                const res = await window.apiFetch('api/bookings.php', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -1046,7 +1065,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         async function fetchClients() {
             try {
-                const res = await fetch('api/Clients.php');
+                const res = await window.apiFetch('api/Clients.php');
                 const text = await res.text();
                 try {
                     const data = JSON.parse(text);
@@ -1127,7 +1146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     document.getElementById('viewBookingsModal').classList.add('show');
 
                     try {
-                        const res = await fetch(`api/bookings.php?user_id=${userId}`);
+                        const res = await window.apiFetch(`api/bookings.php?user_id=${userId}`);
                         const text = await res.text();
                         let bData = [];
                         try {
@@ -1186,7 +1205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 confirmDeleteClientBtn.classList.add('loading');
 
                 try {
-                    const res = await fetch('api/Clients.php', {
+                    const res = await window.apiFetch('api/Clients.php', {
                         method: 'DELETE',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ user_id: ClientToDeleteId })
@@ -1232,7 +1251,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         async function fetchPlans() {
             try {
-                const res = await fetch('api/plans.php');
+                const res = await window.apiFetch('api/plans.php');
                 const text = await res.text();
                 try {
                     const data = JSON.parse(text);
@@ -1373,7 +1392,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 try {
-                    const res = await fetch('api/plans.php', {
+                    const res = await window.apiFetch('api/plans.php', {
                         method: planToEditId ? 'PUT' : 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -1423,7 +1442,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!planToDeleteId) return;
                 confirmDeletePlanBtn.classList.add('loading');
                 try {
-                    const res = await fetch('api/plans.php', {
+                    const res = await window.apiFetch('api/plans.php', {
                         method: 'DELETE',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ id: planToDeleteId })
@@ -1456,7 +1475,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Fetch Settings on Load
         async function fetchSettings() {
             try {
-                const res = await fetch('api/settings.php');
+                const res = await window.apiFetch('api/settings.php');
                 const text = await res.text();
                 const data = JSON.parse(text);
                 
@@ -1566,7 +1585,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             try {
-                const res = await fetch('api/settings.php', {
+                const res = await window.apiFetch('api/settings.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -1642,7 +1661,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     addBlockedDateBtn.textContent = 'Checking...';
                     addBlockedDateBtn.disabled = true;
                     
-                    const res = await fetch('api/bookings.php');
+                    const res = await window.apiFetch('api/bookings.php');
                     const text = await res.text();
                     const data = JSON.parse(text);
                     

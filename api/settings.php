@@ -28,6 +28,9 @@ switch ($method) {
         break;
 
     case 'POST':
+        require_once 'verify_auth.php';
+        $auth = verifyAuth(true); // Admin only
+
         $data = json_decode(file_get_contents("php://input"), true);
         if (!$data || !is_array($data)) {
             echo json_encode(["status" => "error", "message" => "Invalid payload"]);

@@ -10,6 +10,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once 'config.php';
+require_once 'verify_auth.php';
+
+// Only admins can view users
+$auth = verifyAuth(true);
 
 // Fetch users from Clerk
 $ch = curl_init();

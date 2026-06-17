@@ -10,6 +10,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once 'config.php';
+require_once 'verify_auth.php';
+
+// Only admins can view or modify clients
+$auth = verifyAuth(true);
 
 $method = $_SERVER['REQUEST_METHOD'];
 

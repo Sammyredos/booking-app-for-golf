@@ -1,3 +1,22 @@
+
+// Helper function for authenticated API calls
+window.apiFetch = async function(url, options = {}) {
+    if (window.Clerk && window.Clerk.session) {
+        try {
+            const token = await window.Clerk.session.getToken();
+            if (token) {
+                options.headers = {
+                    ...options.headers,
+                    'Authorization': `Bearer ${token}`
+                };
+            }
+        } catch(e) {
+            console.warn('Failed to get Clerk token', e);
+        }
+    }
+    return fetch(url, options);
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     let mockLessons = [];
 
@@ -21,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = window.Clerk.user;
 
         try {
-            const res = await fetch(`api/bookings.php?user_id=${user.id}`);
+            const res = await window.apiFetch(`api/bookings.php?user_id=${user.id}`);
             const text = await res.text();
             let data;
             try {
@@ -261,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     btn.disabled = true;
 
                     try {
-                        const res = await fetch('api/bookings.php', {
+                        const res = await window.apiFetch('api/bookings.php', {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ id: id, status: 'cancelled' })

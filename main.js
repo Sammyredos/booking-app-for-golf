@@ -1,8 +1,27 @@
+
+// Helper function for authenticated API calls
+window.apiFetch = async function(url, options = {}) {
+    if (window.Clerk && window.Clerk.session) {
+        try {
+            const token = await window.Clerk.session.getToken();
+            if (token) {
+                options.headers = {
+                    ...options.headers,
+                    'Authorization': `Bearer ${token}`
+                };
+            }
+        } catch(e) {
+            console.warn('Failed to get Clerk token', e);
+        }
+    }
+    return fetch(url, options);
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Global Settings
     window.SMJ_SETTINGS = {};
     try {
-        const res = await fetch('api/settings.php');
+        const res = await window.apiFetch('api/settings.php');
         const text = await res.text();
         const data = JSON.parse(text);
         if (data.status === 'success' && data.data) {
@@ -473,7 +492,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         async function fetchAndRenderPlans() {
             let plans = [];
             try {
-                const res = await fetch('api/plans.php');
+                const res = await window.apiFetch('api/plans.php');
                 const text = await res.text();
                 const data = JSON.parse(text);
                 if (data.status === 'success') {
@@ -490,7 +509,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const isAdmin = window.Clerk.user.publicMetadata && window.Clerk.user.publicMetadata.role === 'admin';
                 if (!isAdmin) {
                     try {
-                        const lRes = await fetch(`api/user_limits.php?user_id=${window.Clerk.user.id}`);
+                        const lRes = await window.apiFetch(`api/user_limits.php?user_id=${window.Clerk.user.id}`);
                         const lData = await lRes.json();
                         if (lData.status === 'success') {
                             userLimits = lData.data;
@@ -872,7 +891,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let existingBookings = [];
         try {
-            const res = await fetch('api/bookings.php');
+            const res = await window.apiFetch('api/bookings.php');
             const text = await res.text();
             try {
                 const data = JSON.parse(text);
@@ -896,7 +915,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let schedEndMins = 16 * 60;
 
         try {
-            const setRes = await fetch('api/settings.php');
+            const setRes = await window.apiFetch('api/settings.php');
             const setText = await setRes.text();
             const setData = JSON.parse(setText);
             if (setData.status === 'success' && setData.data) {
@@ -1093,7 +1112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 try {
                     // Since this might be tested locally where PHP isn't running via npx serve, 
                     // we simulate the fetch if it fails or returns HTML (like a 404 from serve).
-                    const res = await fetch('api/bookings.php', {
+                    const res = await window.apiFetch('api/bookings.php', {
                         method: method,
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(finalPayload)

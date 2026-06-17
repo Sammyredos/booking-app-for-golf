@@ -11,6 +11,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once 'config.php';
+require_once 'verify_auth.php';
+
+$auth = verifyAuth();
+$serverUserId = $auth['user_id'];
+$serverIsAdmin = $auth['is_admin'];
 
 function queueEmailNotification($conn, $clerkSecret, $userId, $subject, $message) {
     // Fetch settings for email routing
@@ -209,13 +214,19 @@ switch ($method) {
     case 'GET':
         // If user_id is provided, fetch for that user. Otherwise fetch all (for admin).
         $userId = isset($_GET['user_id']) ? $_GET['user_id'] : null;
+        
+        // Security check: normal users can only fetch their own bookings
+        if (!$serverIsAdmin) {
+            $userId = $serverUserId; // Force to their own ID
+        }
+        
         $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $limit = isset($_GET['limit']) ? max(1, (int)$_GET['limit']) : 1000;
         $offset = ($page - 1) * $limit;
         
         $selectCols = "id, user_id, user_name, coach_name, plan_name, booking_date, booking_time, payment_method, payment_reference, status, created_at";
         
-        if ($userId) {
+        if ($userId && (!$serverIsAdmin || isset($_GET['user_id']))) {
             $stmt = $conn->prepare("SELECT $selectCols FROM bookings WHERE user_id = ? ORDER BY booking_date DESC, booking_time DESC LIMIT ? OFFSET ?");
             $stmt->bind_param("sii", $userId, $limit, $offset);
         } else {
@@ -245,8 +256,14 @@ switch ($method) {
             exit;
         }
 
+        $isAdmin = $serverIsAdmin;
+        
+        // Security check: prevent booking on behalf of others unless admin
+        if (!$isAdmin && $data['user_id'] !== $serverUserId) {
+            $data['user_id'] = $serverUserId;
+        }
+
         // Check Advance Booking Limit
-        $isAdmin = isset($data['isAdmin']) && $data['isAdmin'] === true;
         if (!$isAdmin && !isWithinAdvanceBookingLimit($conn, $data['booking_date'])) {
             echo json_encode(["status" => "error", "message" => "You cannot book this far in advance based on the current booking rules."]);
             exit;
@@ -345,7 +362,11 @@ switch ($method) {
             exit;
         }
 
-        $isAdmin = isset($data['isAdmin']) && $data['isAdmin'] === true;
+        $isAdmin = $serverIsAdmin;
+        if (!$isAdmin && $currentBooking['user_id'] !== $serverUserId) {
+            echo json_encode(["status" => "error", "message" => "Unauthorized to modify this booking."]);
+            exit;
+        }
 
         // Check for full edit first
         if (isset($data['user_name']) && isset($data['coach_name']) && isset($data['plan_name']) && isset($data['booking_date']) && isset($data['booking_time']) && isset($data['status'])) {
@@ -427,7 +448,12 @@ switch ($method) {
         $currentBooking = $res->fetch_assoc();
         $stmt_get->close();
         
-        $isAdmin = isset($data['isAdmin']) && $data['isAdmin'] === true;
+        $isAdmin = $serverIsAdmin;
+        if (!$isAdmin && $currentBooking && $currentBooking['user_id'] !== $serverUserId) {
+            echo json_encode(["status" => "error", "message" => "Unauthorized to delete this booking."]);
+            exit;
+        }
+        
         if (!$isAdmin && $currentBooking && isWithinCancellationWindow($conn, $currentBooking['booking_date'], $currentBooking['booking_time'])) {
             echo json_encode(["status" => "error", "message" => "Bookings cannot be cancelled within the cancellation window."]);
             exit;
