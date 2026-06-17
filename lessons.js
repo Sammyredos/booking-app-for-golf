@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridContainer = document.getElementById('lessonGrid');
     const paginationContainer = document.getElementById('paginationControls');
     const tabBtns = document.querySelectorAll('.dashboard-tabs .tab-btn');
+    const filterTypeEl = document.getElementById('filterType');
+    const filterTimeEl = document.getElementById('filterTime');
 
     // Fetch lessons from API or LocalStorage Fallback
     async function fetchLessons() {
@@ -359,6 +361,20 @@ document.addEventListener('DOMContentLoaded', () => {
             renderLessons();
         });
     });
+
+    if (filterTypeEl) {
+        filterTypeEl.addEventListener('change', () => {
+            currentPage = 1;
+            renderLessons();
+        });
+    }
+
+    if (filterTimeEl) {
+        filterTimeEl.addEventListener('change', () => {
+            currentPage = 1;
+            renderLessons();
+        });
+    }
 
     // We wait for window load so Clerk is initialized before fetching
     window.addEventListener('load', () => {

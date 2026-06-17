@@ -113,9 +113,22 @@
                 <button class="btn btn-primary book-btn" style="margin-bottom: 0.5rem;">Book a Lesson</button>
             </div>
 
-            <div class="dashboard-tabs">
-                <button class="tab-btn active">Upcoming</button>
-                <button class="tab-btn">Past</button>
+            <div class="dashboard-tabs" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem; margin-bottom: 2rem;">
+                <div style="display: flex; gap: 1rem;">
+                    <button class="tab-btn active" style="margin: 0; border: none; border-bottom: 2px solid transparent; border-radius: 0;">Upcoming</button>
+                    <button class="tab-btn" style="margin: 0; border: none; border-bottom: 2px solid transparent; border-radius: 0;">Past</button>
+                </div>
+                <div class="dashboard-filters" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <select id="filterType" style="padding: 0.5rem 1rem; border: 2px solid var(--text-dark); background: transparent; font-family: inherit; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; cursor: pointer; border-radius: 0;">
+                        <option value="all">All Lesson Types</option>
+                    </select>
+                    <select id="filterTime" style="padding: 0.5rem 1rem; border: 2px solid var(--text-dark); background: transparent; font-family: inherit; font-weight: 600; font-size: 0.875rem; text-transform: uppercase; cursor: pointer; border-radius: 0;">
+                        <option value="all">All Times</option>
+                        <option value="morning">Morning (6AM - 12PM)</option>
+                        <option value="afternoon">Afternoon (12PM - 5PM)</option>
+                        <option value="evening">Evening (5PM+)</option>
+                    </select>
+                </div>
             </div>
 
             <div class="lesson-grid" id="lessonGrid">
