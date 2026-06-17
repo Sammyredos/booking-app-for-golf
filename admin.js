@@ -255,9 +255,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = 'index.html';
             return;
         }
-        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        
-        if ((user.publicMetadata && user.publicMetadata.role === 'admin') || isLocalhost) {
+        if (user.publicMetadata && user.publicMetadata.role === 'admin') {
             // Authorized
             document.getElementById('authLoader').style.display = 'none';
             fetchAdminBookings();

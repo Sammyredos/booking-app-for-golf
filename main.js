@@ -968,16 +968,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         timeList.innerHTML = '';
         let hasAvailableSlots = false;
         
+        const now = new Date();
+        const isToday = selectedDate.getFullYear() === now.getFullYear() && 
+                        selectedDate.getMonth() === now.getMonth() && 
+                        selectedDate.getDate() === now.getDate();
+        const currentMins = now.getHours() * 60 + now.getMinutes();
+
         allCandidates.forEach(slotStart => {
             const slotEnd = slotStart + requiredMins;
             const cStart = slotStart - bufferBefore;
             const cEnd = slotEnd + bufferAfter;
             
             let isBlocked = false;
-            for (let range of blockedRanges) {
-                if (cStart < range.end && cEnd > range.start) {
-                    isBlocked = true;
-                    break;
+            
+            // Block if the slot has already passed today
+            if (isToday && slotStart <= currentMins) {
+                isBlocked = true;
+            }
+
+            if (!isBlocked) {
+                for (let range of blockedRanges) {
+                    if (cStart < range.end && cEnd > range.start) {
+                        isBlocked = true;
+                        break;
+                    }
                 }
             }
 
