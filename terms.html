@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service — SMJGolf Academy</title>
+    <meta name="description" content="Read SMJGolf Academy's Terms of Service — the rules and conditions for booking golf lessons and using our website at smjghyd.com.ng.">
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .legal-hero {
+            background-color: var(--bg-dark);
+            color: #fff;
+            padding: 5rem 0 4rem;
+        }
+        .legal-hero .tag {
+            color: var(--accent);
+        }
+        .legal-hero h1 {
+            color: #fff;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .legal-hero p {
+            color: rgba(255,255,255,0.55);
+            font-size: 0.95rem;
+            max-width: 480px;
+        }
+        .legal-body {
+            padding: 5rem 0 6rem;
+            background-color: var(--bg-light);
+        }
+        .legal-grid {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 4rem;
+            align-items: start;
+        }
+        .legal-toc {
+            position: sticky;
+            top: 100px;
+        }
+        .legal-toc .toc-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-gray);
+            margin-bottom: 1rem;
+        }
+        .legal-toc a {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-gray);
+            padding: 0.4rem 0;
+            border-left: 2px solid transparent;
+            padding-left: 0.75rem;
+            transition: all 0.2s ease;
+        }
+        .legal-toc a:hover {
+            color: var(--text-dark);
+            border-left-color: var(--accent);
+        }
+        .legal-content section {
+            margin-bottom: 3rem;
+        }
+        .legal-content h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: -0.01em;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+            padding-top: 1rem;
+        }
+        .legal-content p {
+            color: #444;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        .legal-content ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 1rem;
+        }
+        .legal-content ul li {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            padding: 0.5rem 0;
+            color: #444;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+        .legal-content ul li:last-child {
+            border-bottom: none;
+        }
+        .legal-content ul li::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent);
+            border: 2px solid var(--text-dark);
+            flex-shrink: 0;
+            margin-top: 0.45rem;
+        }
+        .legal-divider {
+            width: 3rem;
+            height: 4px;
+            background-color: var(--accent);
+            border: 2px solid var(--text-dark);
+            margin: 1.5rem 0;
+        }
+        .legal-highlight {
+            background: #fff;
+            border: 2px solid var(--text-dark);
+            box-shadow: 4px 4px 0 var(--text-dark);
+            padding: 1.25rem 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .legal-highlight p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        .legal-highlight.accent-highlight {
+            background: var(--accent);
+        }
+        .last-updated {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            background: var(--accent);
+            border: 2px solid var(--text-dark);
+            padding: 0.3rem 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 2rem;
+        }
+        .cancellation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        .cancellation-table th {
+            background: var(--text-dark);
+            color: var(--accent);
+            text-align: left;
+            padding: 0.75rem 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.04em;
+        }
+        .cancellation-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            color: #444;
+        }
+        .cancellation-table tr:last-child td {
+            border-bottom: none;
+        }
+        .cancellation-table tr:nth-child(even) td {
+            background: rgba(0,0,0,0.02);
+        }
+        @media (max-width: 768px) {
+            .legal-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            .legal-toc {
+                position: static;
+                background: #fff;
+                border: 2px solid var(--text-dark);
+                box-shadow: 4px 4px 0 var(--text-dark);
+                padding: 1.25rem;
+            }
+            .legal-toc a {
+                display: inline-block;
+                margin-right: 0.5rem;
+            }
+            .cancellation-table {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="noise-overlay"></div>
+
+    <header class="header">
+        <div class="header-container" style="max-width: 100%; padding: 0 3%;">
+            <div class="logo">
+                <a href="index.html"><img src="assets/logo.png" alt="SMJ GOLF Logo"></a>
+            </div>
+            <nav style="display: flex; align-items: center; gap: 2rem;">
+                <a href="index.html" class="btn btn-primary" style="font-size: 0.85rem;">← Back to Home</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="legal-hero">
+        <div class="container">
+            <span class="tag">Legal</span>
+            <h1>TERMS OF<br>SERVICE.</h1>
+            <p>The rules and conditions for using SMJGolf Academy's services at smjghyd.com.ng.</p>
+        </div>
+    </section>
+
+    <div class="legal-body">
+        <div class="container">
+            <div class="last-updated">Last Updated: June 2026</div>
+
+            <div class="legal-grid">
+                <!-- Table of Contents -->
+                <aside class="legal-toc">
+                    <div class="toc-label">On this page</div>
+                    <a href="#acceptance">Acceptance</a>
+                    <a href="#services">Our Services</a>
+                    <a href="#accounts">Accounts</a>
+                    <a href="#bookings">Bookings & Payments</a>
+                    <a href="#cancellations">Cancellations & Refunds</a>
+                    <a href="#conduct">Conduct</a>
+                    <a href="#liability">Liability</a>
+                    <a href="#health">Health & Safety</a>
+                    <a href="#intellectual">Intellectual Property</a>
+                    <a href="#changes">Changes to Terms</a>
+                    <a href="#contact">Contact</a>
+                </aside>
+
+                <!-- Content -->
+                <div class="legal-content">
+
+                    <section id="acceptance">
+                        <h2>Acceptance of Terms</h2>
+                        <div class="legal-divider"></div>
+                        <p>By accessing or using the SMJGolf Academy website at <strong>smjghyd.com.ng</strong> or booking any of our coaching services, you agree to be bound by these Terms of Service and all applicable laws and regulations.</p>
+                        <div class="legal-highlight accent-highlight">
+                            <p>If you do not agree to these terms, please do not use our website or services. These terms apply to all visitors, users, and anyone who books lessons with us.</p>
+                        </div>
+                        <p>SMJGolf Academy reserves the right to update these terms at any time. It is your responsibility to review this page periodically for changes.</p>
+                    </section>
+
+                    <section id="services">
+                        <h2>Our Services</h2>
+                        <div class="legal-divider"></div>
+                        <p>SMJGolf Academy provides golf coaching and instruction services including, but not limited to:</p>
+                        <ul>
+                            <li>Private one-on-one golf lessons for beginners, intermediate, and advanced players</li>
+                            <li>Junior golf programmes for children</li>
+                            <li>Monthly coaching plans and packages</li>
+                            <li>TrackMan data analysis and video review sessions</li>
+                            <li>On-course playing lessons</li>
+                        </ul>
+                        <p>All lessons are conducted at our facility at 6 Ikoyi Club 1938 Road, Off Alfred Rewane Road, Ikoyi, Lagos, Nigeria, or at agreed alternative venues. Lesson availability is subject to coach availability, weather conditions, and facility access.</p>
+                    </section>
+
+                    <section id="accounts">
+                        <h2>Accounts & Registration</h2>
+                        <div class="legal-divider"></div>
+                        <p>To book a lesson, you must create an account on our platform. By registering, you agree to:</p>
+                        <ul>
+                            <li>Provide accurate, current, and complete information</li>
+                            <li>Keep your account credentials confidential</li>
+                            <li>Notify us immediately of any unauthorised use of your account</li>
+                            <li>Be responsible for all activity that occurs under your account</li>
+                        </ul>
+                        <p>You must be at least 18 years old to create an account. Accounts for minors must be registered and managed by a parent or legal guardian. We use Clerk for secure authentication; by creating an account you also agree to Clerk's terms of service.</p>
+                        <p>We reserve the right to suspend or terminate accounts that violate these terms, without prior notice.</p>
+                    </section>
+
+                    <section id="bookings">
+                        <h2>Bookings & Payments</h2>
+                        <div class="legal-divider"></div>
+                        <p>All lesson bookings are subject to the following conditions:</p>
+                        <ul>
+                            <li>Bookings are confirmed only after payment is received and acknowledged</li>
+                            <li>Prices are displayed in Nigerian Naira (₦) and are subject to change without notice</li>
+                            <li>Payment methods accepted include cash, bank transfer, and any other methods listed on the platform</li>
+                            <li>A payment reference must be provided for all non-cash transactions</li>
+                            <li>You will receive a booking confirmation via email upon successful payment</li>
+                        </ul>
+                        <div class="legal-highlight">
+                            <p><strong>Important:</strong> Booking a time slot does not guarantee the lesson until payment has been confirmed. Time slots are held for 24 hours pending payment confirmation.</p>
+                        </div>
+                    </section>
+
+                    <section id="cancellations">
+                        <h2>Cancellations & Refunds</h2>
+                        <div class="legal-divider"></div>
+                        <p>We understand that plans change. Our cancellation policy is as follows:</p>
+
+                        <table class="cancellation-table">
+                            <thead>
+                                <tr>
+                                    <th>Notice Given</th>
+                                    <th>Refund / Credit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>48+ hours before lesson</td>
+                                    <td>Full refund or reschedule at no charge</td>
+                                </tr>
+                                <tr>
+                                    <td>24–48 hours before lesson</td>
+                                    <td>50% refund or full credit to reschedule</td>
+                                </tr>
+                                <tr>
+                                    <td>Less than 24 hours</td>
+                                    <td>No refund; credit may be issued at coach's discretion</td>
+                                </tr>
+                                <tr>
+                                    <td>No-show (no notice)</td>
+                                    <td>No refund; lesson is forfeited</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <p>To cancel a booking, please contact us at <strong>bookings@smjgolf.com</strong> or call <strong>0706 534 3709</strong>. Cancellations made through the platform will be processed within 5 business days.</p>
+                        <p>In the event that we cancel a lesson due to coach unavailability or facility issues, you will receive a full refund or the option to reschedule.</p>
+                    </section>
+
+                    <section id="conduct">
+                        <h2>Code of Conduct</h2>
+                        <div class="legal-divider"></div>
+                        <p>All clients and visitors to SMJGolf Academy are expected to:</p>
+                        <ul>
+                            <li>Treat coaches, staff, and fellow golfers with respect</li>
+                            <li>Arrive on time for scheduled lessons (late arrivals may result in a shortened session)</li>
+                            <li>Follow all safety guidelines and instructions from coaches</li>
+                            <li>Dress appropriately for golf (golf attire or activewear)</li>
+                            <li>Not use the facilities under the influence of alcohol or substances</li>
+                            <li>Not engage in any discriminatory, harassing, or abusive behaviour</li>
+                        </ul>
+                        <p>SMJGolf Academy reserves the right to refuse service or remove any person who violates this code of conduct. No refund will be issued in such cases.</p>
+                    </section>
+
+                    <section id="liability">
+                        <h2>Limitation of Liability</h2>
+                        <div class="legal-divider"></div>
+                        <p>To the fullest extent permitted by Nigerian law:</p>
+                        <ul>
+                            <li>SMJGolf Academy is not liable for any indirect, incidental, or consequential damages arising from your use of our services</li>
+                            <li>Our total liability for any claim shall not exceed the amount paid for the specific lesson or service in question</li>
+                            <li>We do not guarantee specific improvement in your golf game; results vary by individual</li>
+                            <li>We are not responsible for any personal property lost, stolen, or damaged at our facility</li>
+                        </ul>
+                        <div class="legal-highlight">
+                            <p>Golf is a physical activity that carries inherent risks. By participating in our lessons, you acknowledge these risks and agree that SMJGolf Academy is not liable for any injury arising from normal participation in golf activities.</p>
+                        </div>
+                    </section>
+
+                    <section id="health">
+                        <h2>Health & Safety</h2>
+                        <div class="legal-divider"></div>
+                        <p>Your safety is our priority. By booking with us, you confirm that:</p>
+                        <ul>
+                            <li>You are physically fit to participate in golf lessons</li>
+                            <li>You will inform your coach of any medical conditions, injuries, or physical limitations prior to the lesson</li>
+                            <li>You understand that golf involves physical activity and accept responsibility for your own health</li>
+                            <li>You will follow all safety instructions provided by the coach and facility</li>
+                        </ul>
+                        <p>SMJGolf Academy strongly recommends consulting a physician before beginning any new physical activity if you have existing health concerns.</p>
+                    </section>
+
+                    <section id="intellectual">
+                        <h2>Intellectual Property</h2>
+                        <div class="legal-divider"></div>
+                        <p>All content on the SMJGolf Academy website — including text, images, logos, videos, graphics, and course materials — is the property of SMJGolf Academy and is protected by applicable intellectual property laws.</p>
+                        <ul>
+                            <li>You may not reproduce, distribute, or create derivative works from our content without written permission</li>
+                            <li>You may not use our branding or logo for any purpose without prior written consent</li>
+                            <li>Lesson recordings made by coaches for client feedback are for personal use only and may not be published or shared publicly</li>
+                        </ul>
+                    </section>
+
+                    <section id="changes">
+                        <h2>Changes to These Terms</h2>
+                        <div class="legal-divider"></div>
+                        <p>We reserve the right to modify these Terms of Service at any time. Changes will be posted on this page with an updated effective date. Where changes are significant, we may notify you via email.</p>
+                        <p>Your continued use of our services after any changes constitutes your acceptance of the new terms. If you disagree with any updated terms, you must stop using our services and cancel any outstanding bookings.</p>
+                    </section>
+
+                    <section id="contact">
+                        <h2>Contact Us</h2>
+                        <div class="legal-divider"></div>
+                        <p>If you have questions about these Terms of Service, please contact us:</p>
+                        <ul>
+                            <li><strong>Email:</strong> bookings@smjgolf.com</li>
+                            <li><strong>Phone:</strong> 0706 534 3709</li>
+                            <li><strong>Address:</strong> 6 Ikoyi Club 1938 Road, Off Alfred Rewane Road, Ikoyi, Lagos, Nigeria</li>
+                            <li><strong>Website:</strong> smjghyd.com.ng</li>
+                        </ul>
+                        <p>These Terms of Service are governed by and construed in accordance with the laws of the Federal Republic of Nigeria.</p>
+                    </section>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact-footer">
+        <div class="container footer-container">
+            <div class="footer-left">
+                <h2>LET'S BUILD<br>YOUR GAME.</h2>
+                <p>Send a message. We'll reply within one business day to discuss your goals and get you started.</p>
+            </div>
+            <div class="footer-right">
+                <div class="contact-card">
+                    <div class="card-label">CONTACT INFO</div>
+                    <ul class="contact-list">
+                        <li>
+                            <span class="contact-label">Email:</span>
+                            <strong>bookings@smjgolf.com</strong>
+                        </li>
+                        <li>
+                            <span class="contact-label">Phone:</span>
+                            <strong><a href="tel:07065343709" style="text-decoration: none; color: inherit;">0706 534 3709</a></strong>
+                        </li>
+                        <li>
+                            <span class="contact-label">Address:</span>
+                            <strong>6 Ikoyi Club 1938 Road, Off Alfred Rewane Road, Ikoyi, Lagos, Nigeria</strong>
+                        </li>
+                        <li>
+                            <span class="contact-label">Hours:</span>
+                            <strong>Mon–Sat: 7am–7pm</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container bottom-container">
+                <p>&copy; 2026 SMJGolf Academy. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="privacy.html">Privacy</a>
+                    <a href="terms.html">Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
