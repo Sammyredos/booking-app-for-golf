@@ -343,10 +343,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const expectedRev = upcomingLessons.reduce((sum, b) => sum + getPlanPrice(b.plan_name), 0);
-        if (statExpectedRev) statExpectedRev.textContent = 'â‚¦' + formatCurrency(expectedRev);
+        if (statExpectedRev) statExpectedRev.textContent = '₦' + formatCurrency(expectedRev);
 
         const totalRev = completedLessons.reduce((sum, b) => sum + getPlanPrice(b.plan_name), 0);
-        if (statTotalRev) statTotalRev.textContent = 'â‚¦' + formatCurrency(totalRev);
+        if (statTotalRev) statTotalRev.textContent = '₦' + formatCurrency(totalRev);
 
         renderCharts();
         renderRecentActivity();
@@ -383,7 +383,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             data: {
                 labels: recentDates,
                 datasets: [{
-                    label: 'Revenue (â‚¦)',
+                    label: 'Revenue (₦)',
                     data: revData,
                     borderColor: '#0b1319',
                     backgroundColor: 'rgba(204, 255, 0, 0.2)',
@@ -1307,7 +1307,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tr.innerHTML = `
                     <td><strong>${p.title}</strong>${p.is_premium ? ' <span style="background:var(--accent);font-size:10px;padding:2px 4px;color:black;">Premium</span>' : ''}</td>
                     <td style="text-transform: capitalize;">${p.category}</td>
-                    <td>â‚¦${Number(p.price).toLocaleString()}</td>
+                    <td>₦${Number(p.price).toLocaleString()}</td>
                     <td>${p.duration}</td>
                     <td>
                         <button class="edit-plan-btn" data-id="${p.id}" style="padding: 0.4rem 0.75rem; font-size: 0.75rem; background: var(--text-dark); color: white; border: 2px solid var(--text-dark); cursor: pointer; margin-right: 0.5rem;">Edit</button>

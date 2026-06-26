@@ -430,14 +430,23 @@
             align-items: center;
         }
         .admin-nav-wrapper .nav-link {
-            font-size: 1.1rem;
-            transition: all 0.2s ease;
-            padding: 0.5rem 1rem;
-        }
+                font-size: 1.25rem;
+                padding: 0.75rem 1.5rem !important;
+                width: auto;
+                border-bottom: none;
+                color: var(--text-gray);
+                text-align: center;
+                font-weight: 500;
+                transition: all 0.2s ease;
+            }
         .admin-nav-wrapper .nav-link.active {
-            background: rgba(204, 255, 0, 0.1);
-            border-bottom: 4px solid var(--accent);
-        }
+                background-color: var(--accent);
+                color: var(--text-dark) !important;
+                border: 3px solid var(--text-dark) !important;
+                box-shadow: 4px 4px 0 var(--text-dark);
+                font-weight: 700;
+                transform: translate(-2px, -2px);
+            }
         
         /* Enlarge User Dropdown Toggle */
         .user-dropdown-toggle {
@@ -463,18 +472,28 @@
             }
             .admin-nav-wrapper {
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: center;
                 width: 100%;
-                gap: 0.5rem;
+                gap: 1.5rem;
+                padding: 2rem 0;
             }
             .admin-nav-wrapper .nav-link {
-                font-size: 1.5rem;
-                padding: 1rem 1.5rem !important;
-                width: 100%;
-                border-bottom: 2px solid rgba(0,0,0,0.05);
+                font-size: 1.25rem;
+                padding: 0.75rem 1.5rem !important;
+                width: auto;
+                border-bottom: none;
+                color: var(--text-gray);
+                text-align: center;
+                font-weight: 500;
+                transition: all 0.2s ease;
             }
             .admin-nav-wrapper .nav-link.active {
-                border-bottom: 4px solid var(--accent) !important;
+                background-color: var(--accent);
+                color: var(--text-dark) !important;
+                border: 3px solid var(--text-dark) !important;
+                box-shadow: 4px 4px 0 var(--text-dark);
+                font-weight: 700;
+                transform: translate(-2px, -2px);
             }
         }
     </style>
@@ -496,6 +515,7 @@
                 <div class="admin-nav-wrapper">
                     <a href="admin.html" class="nav-link">Dashboard</a>
                     <a href="admin_bookings.html" class="nav-link">Bookings</a>
+                    <a href="admin_plans.html" class="nav-link">Plans</a>
                     <a href="admin_clients.html" class="nav-link active">Clients</a>
                     <a href="admin_settings.html" class="nav-link">Settings</a>
                 </div>
