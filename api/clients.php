@@ -40,9 +40,10 @@ switch ($method) {
             $clerkUsers = json_decode($clerkResponse, true);
         }
 
-        // 2. Fetch Booking Stats from Local Database
+        // 2. Fetch Booking Stats AND stored user names from Local Database
         $stmt = $conn->prepare("
-            SELECT user_id, COUNT(*) as total_bookings, MAX(created_at) as last_active 
+            SELECT user_id, COUNT(*) as total_bookings, MAX(created_at) as last_active,
+                   MAX(user_name) as stored_name
             FROM bookings 
             GROUP BY user_id
         ");
@@ -60,24 +61,35 @@ switch ($method) {
         
         if (is_array($clerkUsers)) {
             foreach ($clerkUsers as $user) {
-                // Parse Name
-                $firstName = $user['first_name'] ?? '';
-                $lastName = $user['last_name'] ?? '';
-                $fullName = trim($firstName . ' ' . $lastName);
-                if (empty($fullName)) {
-                    $fullName = "Unnamed User";
-                }
-
-                // Parse Email
+                // Parse Email first (needed as fallback for name)
                 $email = '';
                 if (isset($user['email_addresses']) && count($user['email_addresses']) > 0) {
                     $email = $user['email_addresses'][0]['email_address'];
                 }
 
                 $userId = $user['id'];
-                
-                // Get local stats
                 $stats = $bookingStats[$userId] ?? null;
+
+                // Parse Name — try multiple sources in order of preference
+                $firstName = $user['first_name'] ?? '';
+                $lastName = $user['last_name'] ?? '';
+                $fullName = trim($firstName . ' ' . $lastName);
+
+                if (empty($fullName) && !empty($stats['stored_name'])) {
+                    // Use the name stored in bookings table at time of booking
+                    $fullName = trim($stats['stored_name']);
+                }
+                if (empty($fullName) && !empty($user['username'])) {
+                    $fullName = $user['username'];
+                }
+                if (empty($fullName) && !empty($email)) {
+                    // Use the part before the @ as a readable fallback
+                    $fullName = ucwords(str_replace(['.', '_', '-'], ' ', explode('@', $email)[0]));
+                }
+                if (empty($fullName)) {
+                    $fullName = "Unnamed User";
+                }
+
                 $totalBookings = $stats ? (int)$stats['total_bookings'] : 0;
                 
                 // For last active, use booking date if exists, otherwise fallback to clerk created_at

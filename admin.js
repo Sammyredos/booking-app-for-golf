@@ -1,6 +1,6 @@
 
 // Helper function for authenticated API calls
-window.apiFetch = async function(url, options = {}) {
+window.apiFetch = async function (url, options = {}) {
     if (window.Clerk && window.Clerk.session) {
         try {
             const token = await window.Clerk.session.getToken();
@@ -10,7 +10,7 @@ window.apiFetch = async function(url, options = {}) {
                     'Authorization': `Bearer ${token}`
                 };
             }
-        } catch(e) {
+        } catch (e) {
             console.warn('Failed to get Clerk token', e);
         }
     }
@@ -21,7 +21,7 @@ let GLOBAL_SCHEDULE_START = 9 * 60;
 let GLOBAL_SCHEDULE_END = 16 * 60;
 let GLOBAL_BUFFER_BEFORE = 10;
 let GLOBAL_BUFFER_AFTER = 10;
-let GLOBAL_STANDARD_SLOTS = [9*60, 9*60+30, 10*60, 10*60+30, 11*60, 11*60+30, 12*60, 12*60+30, 13*60, 13*60+30, 14*60, 14*60+30, 15*60, 15*60+30, 16*60];
+let GLOBAL_STANDARD_SLOTS = [9 * 60, 9 * 60 + 30, 10 * 60, 10 * 60 + 30, 11 * 60, 11 * 60 + 30, 12 * 60, 12 * 60 + 30, 13 * 60, 13 * 60 + 30, 14 * 60, 14 * 60 + 30, 15 * 60, 15 * 60 + 30, 16 * 60];
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Load Global Schedule Settings
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 GLOBAL_STANDARD_SLOTS.push(curr);
             }
         }
-    } catch(e) {
+    } catch (e) {
         console.warn('Failed to load global schedule settings', e);
     }
 
@@ -85,9 +85,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!timeSelect || !dateStr) return;
 
         const currentPlanDuration = parseDurationMins(planSelect ? planSelect.value : '');
-        const todaysBookings = allBookings.filter(b => 
-            b.booking_date === dateStr && 
-            b.status !== 'cancelled' && 
+        const todaysBookings = allBookings.filter(b =>
+            b.booking_date === dateStr &&
+            b.status !== 'cancelled' &&
             String(b.id) !== String(currentBookingId)
         );
 
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (afterCandidate >= GLOBAL_SCHEDULE_START && afterCandidate <= GLOBAL_SCHEDULE_END && !allCandidates.includes(afterCandidate)) {
                 allCandidates.push(afterCandidate);
             }
-            
+
             // The exact slot BEFORE this booking:
             let beforeCandidate = range.start - currentPlanDuration - GLOBAL_BUFFER_AFTER;
             if (beforeCandidate >= GLOBAL_SCHEDULE_START && beforeCandidate <= GLOBAL_SCHEDULE_END && !allCandidates.includes(beforeCandidate)) {
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let firstAvailable = null;
 
         allCandidates.forEach(slotStart => {
-            const slotEnd = slotStart + currentPlanDuration; 
+            const slotEnd = slotStart + currentPlanDuration;
             const cStart = slotStart - GLOBAL_BUFFER_BEFORE;
             const cEnd = slotEnd + GLOBAL_BUFFER_AFTER;
 
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let newDatePicker, editDatePicker;
-    
+
     // Initialize Flatpickr after a short delay to ensure DOM is fully ready
     setTimeout(() => {
         if (window.flatpickr) {
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     dateFormat: "Y-m-d",
                     minDate: "today",
                     disableMobile: "true",
-                    onChange: function(selectedDates, dateStr) {
+                    onChange: function (selectedDates, dateStr) {
                         updateAvailableTimeSlots(dateStr, 'newTime', 'newPlanName');
                     }
                 });
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 editDatePicker = flatpickr(editDateEl, {
                     dateFormat: "Y-m-d",
                     disableMobile: "true",
-                    onChange: function(selectedDates, dateStr) {
+                    onChange: function (selectedDates, dateStr) {
                         const currentId = document.getElementById('editBookingId').value;
                         updateAvailableTimeSlots(dateStr, 'editTime', 'editPlanName', currentId);
                     }
@@ -266,9 +266,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Exposed globally so admin.html can call it immediately after Clerk loads
-    window.checkAdminAuth = function() {
+    window.checkAdminAuth = function () {
         const user = window.Clerk ? window.Clerk.user : null;
-        
+
         // If not logged in, redirect to index.
         if (!user) {
             window.location.href = 'index.html';
@@ -278,6 +278,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Authorized
             document.getElementById('authLoader').style.display = 'none';
             fetchAdminBookings();
+            // Trigger page-specific data loads that require auth
+            if (typeof window.fetchClients === 'function' && document.getElementById('ClientsTableBody')) {
+                window.fetchClients();
+            }
         } else {
             // Unauthorized
             window.location.href = 'index.html';
@@ -291,7 +295,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (data.status === 'success') {
                 return data.data;
             }
-        } catch(e) {}
+        } catch (e) { }
         return [];
     }
 
@@ -339,10 +343,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const expectedRev = upcomingLessons.reduce((sum, b) => sum + getPlanPrice(b.plan_name), 0);
-        if (statExpectedRev) statExpectedRev.textContent = '₦' + formatCurrency(expectedRev);
+        if (statExpectedRev) statExpectedRev.textContent = 'â‚¦' + formatCurrency(expectedRev);
 
         const totalRev = completedLessons.reduce((sum, b) => sum + getPlanPrice(b.plan_name), 0);
-        if (statTotalRev) statTotalRev.textContent = '₦' + formatCurrency(totalRev);
+        if (statTotalRev) statTotalRev.textContent = 'â‚¦' + formatCurrency(totalRev);
 
         renderCharts();
         renderRecentActivity();
@@ -367,7 +371,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const d = b.booking_date;
             dateRevenue[d] = (dateRevenue[d] || 0) + getPlanPrice(b.plan_name);
         });
-        
+
         const sortedDates = Object.keys(dateRevenue).sort();
         // Take last 7 dates that have bookings
         const recentDates = sortedDates.slice(-7);
@@ -379,7 +383,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             data: {
                 labels: recentDates,
                 datasets: [{
-                    label: 'Revenue (₦)',
+                    label: 'Revenue (â‚¦)',
                     data: revData,
                     borderColor: '#0b1319',
                     backgroundColor: 'rgba(204, 255, 0, 0.2)',
@@ -423,7 +427,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 },
                 plugins: {
-                    legend: { 
+                    legend: {
                         position: 'bottom',
                         labels: {
                             padding: 15,
@@ -520,7 +524,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     allBookings = data.data;
                 }
-            } catch(e) {
+            } catch (e) {
                 if (!silent) console.warn("PHP API not reachable, falling back to localStorage.");
                 const localData = JSON.parse(localStorage.getItem('smj_local_bookings') || '[]');
                 if (silent && JSON.stringify(allBookings) === JSON.stringify(localData)) {
@@ -528,11 +532,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 allBookings = localData;
             }
-        } catch(err) {
+        } catch (err) {
             if (!silent) console.error("Failed to fetch admin bookings:", err);
             return;
         }
-        
+
         renderAdminDashboard();
         calculateDashboardStats();
     }
@@ -542,36 +546,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Only poll if no modals are open to avoid disrupting admin actions
         const editModal = document.getElementById('editBookingModal');
         const deleteModal = document.getElementById('deleteConfirmModal');
-        
+
         if (editModal && editModal.classList.contains('show')) return;
         if (deleteModal && deleteModal.classList.contains('show')) return;
-        
+
         fetchAdminBookings(true);
     }, 10000);
 
     function filterByDateRange(bookings, filterValue) {
         if (filterValue === 'all') return bookings;
-        
+
         const now = new Date();
         const todayStr = now.toLocaleDateString('en-CA');
-        
+
         if (filterValue === 'today') {
             return bookings.filter(b => b.booking_date === todayStr);
         }
-        
+
         if (filterValue === 'week') {
             const currentDay = now.getDay();
             const startOfWeek = new Date(now);
             startOfWeek.setDate(now.getDate() - currentDay);
             const endOfWeek = new Date(startOfWeek);
             endOfWeek.setDate(startOfWeek.getDate() + 6);
-            
+
             return bookings.filter(b => {
                 const bDate = new Date(b.booking_date);
                 return bDate >= startOfWeek && bDate <= endOfWeek;
             });
         }
-        
+
         if (filterValue === 'month') {
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
@@ -629,17 +633,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Pagination Logic
         const totalPages = Math.ceil(filteredBookings.length / adminItemsPerPage);
         if (adminBookingsCurrentPage > totalPages && totalPages > 0) adminBookingsCurrentPage = totalPages;
-        
+
         const startIndex = (adminBookingsCurrentPage - 1) * adminItemsPerPage;
         const endIndex = startIndex + adminItemsPerPage;
         const pageBookings = filteredBookings.slice(startIndex, endIndex);
 
         pageBookings.forEach(booking => {
             const tr = document.createElement('tr');
-            
+
             const dateObj = new Date(booking.booking_date);
             const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            
+
             const statusClass = booking.status === 'upcoming' ? 'status-upcoming' : (booking.status === 'cancelled' ? 'status-cancelled' : 'status-completed');
 
             tr.innerHTML = `
@@ -685,7 +689,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const editModal = document.getElementById('editBookingModal');
     const closeEditModalBtn = document.getElementById('closeEditModalBtn');
     const editForm = document.getElementById('editBookingForm');
-    
+
     // Delete Modal Logic
     const deleteModal = document.getElementById('deleteConfirmModal');
     const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
@@ -702,9 +706,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener('click', async () => {
             if (!bookingToDeleteId) return;
-            
+
             confirmDeleteBtn.classList.add('loading');
-            
+
             try {
                 const res = await window.apiFetch('api/bookings.php', {
                     method: 'DELETE',
@@ -714,21 +718,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const text = await res.text();
                 try {
                     const data = JSON.parse(text);
-                    if(data.status === 'success') {
+                    if (data.status === 'success') {
                         window.showToaster("Booking deleted successfully!");
                     } else {
                         window.showToaster(data.message || "Failed to delete", true);
                     }
-                } catch(err) {
+                } catch (err) {
                     let localBookings = JSON.parse(localStorage.getItem('smj_local_bookings') || '[]');
                     localBookings = localBookings.filter(b => String(b.id) !== String(bookingToDeleteId));
                     localStorage.setItem('smj_local_bookings', JSON.stringify(localBookings));
                     window.showToaster("Booking deleted (Local Mode)");
                 }
-            } catch(err) {
+            } catch (err) {
                 console.error(err);
             }
-            
+
             confirmDeleteBtn.classList.remove('loading');
             deleteModal.classList.remove('show');
             bookingToDeleteId = null;
@@ -744,7 +748,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('editDate').value = booking.booking_date;
         document.getElementById('editTime').value = booking.booking_time;
         document.getElementById('editStatus').value = booking.status;
-        
+
         editModal.classList.add('show');
     }
 
@@ -765,21 +769,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     const closeNewModalBtn = document.getElementById('closeNewModalBtn');
     const closeNewModalTopBtn = document.getElementById('closeNewModalTopBtn');
     const newBookingForm = document.getElementById('newBookingForm');
-    
+
     let allClerkUsers = [];
 
     if (openNewModalBtn) {
         openNewModalBtn.addEventListener('click', async () => {
             if (newModal) newModal.classList.add('show');
-            
+
             const searchInput = document.getElementById('newGolferSearch');
             const listElement = document.getElementById('newGolferList');
             const idInput = document.getElementById('newGolferId');
-            
+
             if (searchInput && listElement) {
                 searchInput.value = 'Loading...';
                 searchInput.disabled = true;
-                
+
                 if (window.globalClerkUsers && window.globalClerkUsers.length > 0) {
                     allClerkUsers = window.globalClerkUsers;
                     searchInput.value = '';
@@ -798,7 +802,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         } else {
                             searchInput.value = 'Failed to load users';
                         }
-                    } catch(e) {
+                    } catch (e) {
                         searchInput.value = 'Error loading users';
                     }
                 }
@@ -807,17 +811,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 searchInput.addEventListener('input', (e) => {
                     const query = e.target.value.toLowerCase();
                     listElement.innerHTML = '';
-                    
+
                     if (query.trim() === '') {
                         listElement.style.display = 'none';
                         return;
                     }
-                    
-                    const filtered = allClerkUsers.filter(u => 
-                        u.name.toLowerCase().includes(query) || 
+
+                    const filtered = allClerkUsers.filter(u =>
+                        u.name.toLowerCase().includes(query) ||
                         u.email.toLowerCase().includes(query)
                     );
-                    
+
                     if (filtered.length > 0) {
                         filtered.forEach(u => {
                             const li = document.createElement('li');
@@ -834,7 +838,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         listElement.style.display = 'none';
                     }
                 });
-                
+
                 // Hide list when clicking outside
                 document.addEventListener('click', (e) => {
                     if (e.target !== searchInput && e.target !== listElement) {
@@ -859,15 +863,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (newBookingForm) {
         newBookingForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const idInput = document.getElementById('newGolferId');
             const searchInput = document.getElementById('newGolferSearch');
-            
+
             if (!idInput.value) {
                 window.showToaster("Please select a golfer from the dropdown list.", true);
                 return;
             }
-            
+
             const btn = document.getElementById('saveNewBtn');
             btn.classList.add('loading');
 
@@ -889,7 +893,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const text = await res.text();
                 try {
                     const data = JSON.parse(text);
-                    if(data.status === 'success') {
+                    if (data.status === 'success') {
                         window.showToaster("Booking created successfully!");
                         if (newModal) newModal.classList.remove('show');
                         newBookingForm.reset();
@@ -898,10 +902,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     } else {
                         window.showToaster(data.message || "Failed to create booking", true);
                     }
-                } catch(err) {
+                } catch (err) {
                     window.showToaster("Booking creation failed (Server error)", true);
                 }
-            } catch(err) {
+            } catch (err) {
                 console.error(err);
                 window.showToaster("Network error", true);
             }
@@ -933,10 +937,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 hours = parseInt(hours, 10);
                 if (modifier === 'PM' && hours < 12) hours += 12;
                 if (modifier === 'AM' && hours === 12) hours = 0;
-                
+
                 const bookingDateTime = new Date(year, month - 1, day, hours, parseInt(minutes, 10));
                 const now = new Date();
-                
+
                 if (bookingDateTime > now) {
                     window.showToaster("Validation Error: Cannot mark a future booking as completed.", true);
                     btn.classList.remove('loading');
@@ -950,31 +954,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                
+
                 const text = await res.text();
                 try {
                     const data = JSON.parse(text);
-                    if(data.status === 'success') {
+                    if (data.status === 'success') {
                         window.showToaster("Booking updated successfully!");
                         editModal.classList.remove('show');
                     } else {
                         window.showToaster(data.message || "Failed to update booking", true);
                     }
-                } catch(err) {
+                } catch (err) {
                     let localBookings = JSON.parse(localStorage.getItem('smj_local_bookings') || '[]');
                     const index = localBookings.findIndex(b => String(b.id) === String(payload.id));
-                    if(index > -1) {
+                    if (index > -1) {
                         localBookings[index] = { ...localBookings[index], ...payload };
                         localStorage.setItem('smj_local_bookings', JSON.stringify(localBookings));
                     }
                     window.showToaster("Booking updated (Local Mode)");
                     editModal.classList.remove('show');
                 }
-            } catch(err) {
+            } catch (err) {
                 console.error(err);
                 window.showToaster("Network error", true);
             }
-            
+
             btn.classList.remove('loading');
             fetchAdminBookings();
         });
@@ -991,11 +995,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Modal State
         let currentViewBookingsData = [];
         let currentViewBookingsSortDesc = true;
-        
+
         const vSearch = document.getElementById('viewBookingsSearch');
         const vFilter = document.getElementById('viewBookingsStatusFilter');
         const vSortBtn = document.getElementById('viewBookingsSortBtn');
-        
+
         if (vSearch) vSearch.addEventListener('input', renderViewBookingsTable);
         if (vFilter) vFilter.addEventListener('change', renderViewBookingsTable);
         if (vSortBtn) {
@@ -1005,20 +1009,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 renderViewBookingsTable();
             });
         }
-        
+
         function renderViewBookingsTable() {
             const tbody = document.getElementById('viewBookingsTableBody');
             if (!tbody) return;
-            
+
             const searchQ = vSearch ? vSearch.value.toLowerCase().trim() : '';
             const statusF = vFilter ? vFilter.value : 'all';
-            
+
             let filtered = currentViewBookingsData;
-            
+
             if (statusF !== 'all') {
                 filtered = filtered.filter(b => b.status === statusF);
             }
-            
+
             if (searchQ) {
                 const tokens = searchQ.split(/\s+/);
                 filtered = filtered.filter(b => {
@@ -1026,23 +1030,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return tokens.every(token => str.includes(token));
                 });
             }
-            
-            filtered.sort((a,b) => {
+
+            filtered.sort((a, b) => {
                 const dA = new Date(a.booking_date);
                 const dB = new Date(b.booking_date);
                 return currentViewBookingsSortDesc ? dB - dA : dA - dB;
             });
-            
+
             tbody.innerHTML = '';
             if (filtered.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No history found.</td></tr>';
                 return;
             }
-            
+
             filtered.forEach(b => {
                 const dStr = new Date(b.booking_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                 const statusClass = b.status === 'upcoming' ? 'status-upcoming' : (b.status === 'cancelled' ? 'status-cancelled' : 'status-completed');
-                
+
                 tbody.innerHTML += `
                     <tr>
                         <td><div style="font-weight:600">${dStr}</div><div style="font-size:0.85rem; color:var(--text-gray);">${b.booking_time}</div></td>
@@ -1054,7 +1058,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        const ClientSearchInput = document.getElementById('ClientSearchInput');
+        const ClientSearchInput = document.getElementById('ClientsearchInput');
         if (ClientSearchInput) {
             ClientSearchInput.addEventListener('input', (e) => {
                 ClientSearchQuery = e.target.value.toLowerCase().trim();
@@ -1063,9 +1067,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        async function fetchClients() {
+        window.fetchClients = async function fetchClients() {
             try {
-                const res = await window.apiFetch('api/Clients.php');
+                const res = await window.apiFetch('api/clients.php');
                 const text = await res.text();
                 try {
                     const data = JSON.parse(text);
@@ -1102,7 +1106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const totalPages = Math.ceil(filtered.length / adminItemsPerPage);
             if (adminClientsCurrentPage > totalPages && totalPages > 0) adminClientsCurrentPage = totalPages;
-            
+
             const startIndex = (adminClientsCurrentPage - 1) * adminItemsPerPage;
             const endIndex = startIndex + adminItemsPerPage;
             const pageClients = filtered.slice(startIndex, endIndex);
@@ -1111,7 +1115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const tr = document.createElement('tr');
                 const lastActiveObj = new Date(c.last_active);
                 const lastActiveStr = lastActiveObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                
+
                 tr.innerHTML = `
                     <td data-label="Name"><div style="font-weight: 600; color: var(--text-dark); text-transform: capitalize;">${c.name}</div></td>
                     <td data-label="Email"><div style="color: var(--text-dark);">${c.email || '-'}</div></td>
@@ -1137,12 +1141,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     document.getElementById('viewBookingsName').textContent = userName;
                     const tbody = document.getElementById('viewBookingsTableBody');
                     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
-                    
+
                     if (vSearch) vSearch.value = '';
                     if (vFilter) vFilter.value = 'all';
                     currentViewBookingsSortDesc = true;
                     if (vSortBtn) vSortBtn.textContent = 'Sort: Newest';
-                    
+
                     document.getElementById('viewBookingsModal').classList.add('show');
 
                     try {
@@ -1152,16 +1156,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                         try {
                             const data = JSON.parse(text);
                             if (data.status === 'success') bData = data.data;
-                        } catch(err) {
+                        } catch (err) {
                             // Local fallback
                             const allB = JSON.parse(localStorage.getItem('smj_local_bookings') || '[]');
                             bData = allB.filter(b => b.user_id === userId);
                         }
-                        
+
                         currentViewBookingsData = bData;
                         renderViewBookingsTable();
 
-                    } catch(e) {
+                    } catch (e) {
                         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#ef4444;">Error loading bookings.</td></tr>';
                     }
                 });
@@ -1170,13 +1174,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.querySelectorAll('.delete-Client-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     ClientToDeleteId = e.target.dataset.id;
-                    const modal = document.getElementById('deleteClientModal');
+                    const modal = document.getElementById('deleteCustomerModal');
                     if (modal) modal.classList.add('show');
                 });
             });
         }
 
-        fetchClients();
+        // fetchClients() is now triggered by checkAdminAuth() after Clerk auth is confirmed
 
         // Close View Bookings Modal
         const closeViewBookingsBtn = document.getElementById('closeViewBookingsBtn');
@@ -1188,9 +1192,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Delete Client Logic
         let ClientToDeleteId = null;
-        const deleteClientModal = document.getElementById('deleteClientModal');
-        const cancelDeleteClientBtn = document.getElementById('cancelDeleteClientBtn');
-        const confirmDeleteClientBtn = document.getElementById('confirmDeleteClientBtn');
+        const deleteClientModal = document.getElementById('deleteCustomerModal');
+        const cancelDeleteClientBtn = document.getElementById('cancelDeleteCustomerBtn');
+        const confirmDeleteClientBtn = document.getElementById('confirmDeleteCustomerBtn');
 
         if (cancelDeleteClientBtn) {
             cancelDeleteClientBtn.addEventListener('click', () => {
@@ -1205,7 +1209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 confirmDeleteClientBtn.classList.add('loading');
 
                 try {
-                    const res = await window.apiFetch('api/Clients.php', {
+                    const res = await window.apiFetch('api/clients.php', {
                         method: 'DELETE',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ user_id: ClientToDeleteId })
@@ -1214,13 +1218,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     try {
                         const data = JSON.parse(text);
                         if (data.status !== 'success') throw new Error();
-                    } catch(err) {
+                    } catch (err) {
                         // local fallback
                         let localB = JSON.parse(localStorage.getItem('smj_local_bookings') || '[]');
                         localB = localB.filter(b => b.user_id !== ClientToDeleteId);
                         localStorage.setItem('smj_local_bookings', JSON.stringify(localB));
                     }
-                    
+
                     window.showToaster ? window.showToaster("User data wiped") : alert("Deleted");
                     deleteClientModal.classList.remove('show');
                     fetchClients();
@@ -1264,10 +1268,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     } else {
                         allPlans = JSON.parse(localStorage.getItem('smj_local_plans') || '[]');
                     }
-                } catch(e) {
+                } catch (e) {
                     allPlans = JSON.parse(localStorage.getItem('smj_local_plans') || '[]');
                 }
-            } catch(e) {
+            } catch (e) {
                 allPlans = JSON.parse(localStorage.getItem('smj_local_plans') || '[]');
             }
             renderPlansTable();
@@ -1287,7 +1291,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (filtered.length === 0) {
                 plansTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem;">No plans found.</td></tr>';
                 const pagControls = document.getElementById('adminPlansPagination');
-                if(pagControls) pagControls.innerHTML = '';
+                if (pagControls) pagControls.innerHTML = '';
                 return;
             }
 
@@ -1303,7 +1307,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tr.innerHTML = `
                     <td><strong>${p.title}</strong>${p.is_premium ? ' <span style="background:var(--accent);font-size:10px;padding:2px 4px;color:black;">Premium</span>' : ''}</td>
                     <td style="text-transform: capitalize;">${p.category}</td>
-                    <td>₦${Number(p.price).toLocaleString()}</td>
+                    <td>â‚¦${Number(p.price).toLocaleString()}</td>
                     <td>${p.duration}</td>
                     <td>
                         <button class="edit-plan-btn" data-id="${p.id}" style="padding: 0.4rem 0.75rem; font-size: 0.75rem; background: var(--text-dark); color: white; border: 2px solid var(--text-dark); cursor: pointer; margin-right: 0.5rem;">Edit</button>
@@ -1321,7 +1325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 btn.addEventListener('click', (e) => {
                     planToDeleteId = e.target.dataset.id;
                     const modal = document.getElementById('deletePlanModal');
-                    if(modal) modal.classList.add('show');
+                    if (modal) modal.classList.add('show');
                 });
             });
 
@@ -1329,7 +1333,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 btn.addEventListener('click', (e) => {
                     const id = e.target.dataset.id;
                     const p = allPlans.find(plan => String(plan.id) === String(id));
-                    if(p) {
+                    if (p) {
                         planToEditId = p.id;
                         document.getElementById('planModalTitle').textContent = 'Edit Plan';
                         document.getElementById('planInputTitle').value = p.title;
@@ -1339,7 +1343,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         document.getElementById('planInputFeatures').value = Array.isArray(p.features) ? p.features.join('\n') : '';
                         document.getElementById('planInputPremium').checked = !!p.is_premium;
                         const modal = document.getElementById('planModal');
-                        if(modal) modal.classList.add('show');
+                        if (modal) modal.classList.add('show');
                     }
                 });
             });
@@ -1413,7 +1417,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         } else {
                             errMsg = data.message || 'Database error. Saving locally.';
                         }
-                    } catch(parseErr) {
+                    } catch (parseErr) {
                         errMsg = 'Unexpected server response. Saving locally.';
                     }
 
@@ -1422,10 +1426,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const localP = JSON.parse(localStorage.getItem('smj_local_plans') || '[]');
                         if (planToEditId) {
                             const idx = localP.findIndex(p => String(p.id) === String(planToEditId));
-                            if (idx >= 0) localP[idx] = {...payload, id: planToEditId};
-                            else localP.push({...payload, id: planToEditId});
+                            if (idx >= 0) localP[idx] = { ...payload, id: planToEditId };
+                            else localP.push({ ...payload, id: planToEditId });
                         } else {
-                            localP.push({...payload, id: Date.now()});
+                            localP.push({ ...payload, id: Date.now() });
                         }
                         localStorage.setItem('smj_local_plans', JSON.stringify(localP));
                         console.warn('Plan saved locally (DB error):', errMsg);
@@ -1435,7 +1439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     planModal.classList.remove('show');
                     fetchPlans();
-                } catch(e) {
+                } catch (e) {
                     window.showToaster ? window.showToaster('Failed to save plan: ' + e.message, true) : alert('Error saving plan');
                 }
                 savePlanBtn.classList.remove('loading');
@@ -1471,13 +1475,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     try {
                         const data = JSON.parse(text);
                         if (data.status !== 'success') throw new Error();
-                    } catch(err) {
+                    } catch (err) {
                         // local fallback
                         let localP = JSON.parse(localStorage.getItem('smj_local_plans') || '[]');
                         localP = localP.filter(p => String(p.id) !== String(planToDeleteId));
                         localStorage.setItem('smj_local_plans', JSON.stringify(localP));
                     }
-                    
+
                     window.showToaster ? window.showToaster("Plan deleted") : alert("Deleted");
                     closePlanDelete();
                     fetchPlans();
@@ -1498,21 +1502,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const res = await window.apiFetch('api/settings.php');
                 const text = await res.text();
                 const data = JSON.parse(text);
-                
+
                 if (data.status === 'success' && data.data) {
                     const s = data.data;
                     if (s.schedule_start) document.getElementById('schedule_start').value = s.schedule_start;
                     if (s.schedule_end) document.getElementById('schedule_end').value = s.schedule_end;
                     if (s.buffer_before !== undefined) document.getElementById('buffer_before').value = s.buffer_before;
                     if (s.buffer_after !== undefined) document.getElementById('buffer_after').value = s.buffer_after;
-                    
+
                     if (s.working_days) {
                         const daysArray = s.working_days.split(',');
                         document.querySelectorAll('.working-day-cb').forEach(cb => {
                             cb.checked = daysArray.includes(cb.value);
                         });
                     }
-                    
+
                     if (s.blocked_dates) {
                         const datesArray = s.blocked_dates.split(',').filter(d => d.trim() !== '');
                         datesArray.forEach(dateStr => addBlockedDateToUI(dateStr));
@@ -1559,7 +1563,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         }
-        
+
         fetchSettings();
 
         // Save Settings
@@ -1575,7 +1579,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .filter(cb => cb.checked)
                 .map(cb => cb.value)
                 .join(',');
-                
+
             // Collect blocked dates
             const blockedDates = Array.from(document.querySelectorAll('.blocked-date-item'))
                 .map(item => item.dataset.date)
@@ -1597,7 +1601,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 admin_email: document.getElementById('admin_email').value,
                 email_automations: document.getElementById('email_automations').value
             };
-            
+
             // Only update secret key if they typed a new one
             const newSecret = document.getElementById('paystack_secret_key').value;
             if (newSecret && newSecret.trim() !== '') {
@@ -1612,7 +1616,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
                 const text = await res.text();
                 const data = JSON.parse(text);
-                
+
                 if (data.status === 'success') {
                     window.showToaster ? window.showToaster('Settings saved successfully!') : alert('Settings saved successfully!');
                 } else {
@@ -1627,12 +1631,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.textContent = originalText;
             btn.style.pointerEvents = 'auto';
         });
-        
+
         // Blocked Dates UI Logic
         const addBlockedDateBtn = document.getElementById('addBlockedDateBtn');
         const newBlockedDateInput = document.getElementById('new_blocked_date');
         const blockedDatesList = document.getElementById('blocked_dates_list');
-        
+
         // Initialize Flatpickr for the modern calendar
         if (window.flatpickr && newBlockedDateInput) {
             flatpickr(newBlockedDateInput, {
@@ -1641,12 +1645,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 minDate: "today"
             });
         }
-        
+
         function addBlockedDateToUI(dateStr) {
             // Check if already exists
             const existing = document.querySelector(`.blocked-date-item[data-date="${dateStr}"]`);
             if (existing) return;
-            
+
             const div = document.createElement('div');
             div.className = 'blocked-date-item';
             div.dataset.date = dateStr;
@@ -1656,91 +1660,91 @@ document.addEventListener('DOMContentLoaded', async () => {
             div.style.padding = '0.5rem 1rem';
             div.style.background = '#f9fafb';
             div.style.border = '2px solid var(--text-dark)';
-            
+
             const dateObj = new Date(dateStr);
             const formatted = dateObj.toLocaleDateString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            
+
             div.innerHTML = `
                 <span style="font-weight: 500;">${formatted}</span>
                 <button type="button" class="btn remove-date-btn" style="padding: 0.25rem 0.75rem; background: transparent; color: red; border: 2px solid red;">Remove</button>
             `;
-            
+
             div.querySelector('.remove-date-btn').addEventListener('click', () => {
                 div.remove();
             });
-            
+
             blockedDatesList.appendChild(div);
         }
-        
+
         if (addBlockedDateBtn && newBlockedDateInput) {
             addBlockedDateBtn.addEventListener('click', async () => {
                 const val = newBlockedDateInput.value;
                 if (!val) return;
-                
+
                 try {
                     addBlockedDateBtn.textContent = 'Checking...';
                     addBlockedDateBtn.disabled = true;
-                    
+
                     const res = await window.apiFetch('api/bookings.php');
                     const text = await res.text();
                     const data = JSON.parse(text);
-                    
+
                     let bookingCount = 0;
                     if (data.status === 'success' && data.data) {
                         const upcomingBookings = data.data.filter(b => b.booking_date === val && b.status === 'upcoming');
                         bookingCount = upcomingBookings.length;
                     }
-                    
+
                     if (bookingCount > 0) {
                         const confirmBlock = await new Promise((resolve) => {
                             const modal = document.getElementById('blockDateModal');
                             const modalText = document.getElementById('blockDateModalText');
                             const cancelBtn = document.getElementById('cancelBlockDateBtn');
                             const confirmBtn = document.getElementById('confirmBlockDateBtn');
-                            
+
                             if (!modal) {
                                 // Fallback if HTML wasn't updated
                                 resolve(confirm(`WARNING: There are ${bookingCount} active upcoming bookings on ${val}.\n\nAre you sure you want to block this date? Existing bookings will NOT be automatically canceled, but new golfers will be prevented from booking.`));
                                 return;
                             }
-                            
+
                             modalText.textContent = `There are ${bookingCount} active upcoming bookings on ${val}. Are you sure you want to block this date? Existing bookings will NOT be automatically canceled, but new golfers will be prevented from booking.`;
                             modal.style.display = 'flex';
-                            
+
                             const onCancel = () => {
                                 modal.style.display = 'none';
                                 cleanup();
                                 resolve(false);
                             };
-                            
+
                             const onConfirm = () => {
                                 modal.style.display = 'none';
                                 cleanup();
                                 resolve(true);
                             };
-                            
+
                             cancelBtn.addEventListener('click', onCancel);
                             confirmBtn.addEventListener('click', onConfirm);
-                            
+
                             function cleanup() {
                                 cancelBtn.removeEventListener('click', onCancel);
                                 confirmBtn.removeEventListener('click', onConfirm);
                             }
                         });
-                        
+
                         if (!confirmBlock) {
                             addBlockedDateBtn.textContent = 'Add Date';
                             addBlockedDateBtn.disabled = false;
                             return; // User canceled
                         }
                     }
-                } catch(e) {
+                } catch (e) {
                     console.warn('Could not check for existing bookings', e);
                 }
-                
+
                 addBlockedDateBtn.textContent = 'Add Date';
                 addBlockedDateBtn.disabled = false;
-                
+
                 addBlockedDateToUI(val);
                 newBlockedDateInput.value = '';
             });

@@ -50,8 +50,12 @@ CREATE TABLE IF NOT EXISTS email_queue (
     subject VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
     status ENUM('pending', 'sent', 'failed') DEFAULT 'pending',
+    attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Run this on existing databases that were created before the attempts column was added:
+-- ALTER TABLE email_queue ADD COLUMN IF NOT EXISTS attempts TINYINT UNSIGNED NOT NULL DEFAULT 0;
 
 -- Indexes for optimization
 CREATE INDEX idx_bookings_user_id ON bookings(user_id);

@@ -50,7 +50,7 @@ function queueEmailNotification($conn, $clerkSecret, $userId, $subject, $message
         $userMessage = $message . "\n\nYou can manage, reschedule, or cancel your bookings anytime from your dashboard at " . $protocol . "://" . $domain . "/lessons.html";
         
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, "https://api.clerk.dev/v1/users/" . $userId);
+        curl_setopt($ch, CURLOPT_URL, "https://api.clerk.com/v1/users/" . $userId);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             "Authorization: Bearer " . $clerkSecret,
