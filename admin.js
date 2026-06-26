@@ -1256,7 +1256,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 try {
                     const data = JSON.parse(text);
                     if (data.status === 'success') {
-                        allPlans = data.data;
+                        const dbPlans = data.data;
+                        // Merge any localStorage-only plans that aren't in the DB
+                        const localP = JSON.parse(localStorage.getItem('smj_local_plans') || '[]');
+                        const localOnly = localP.filter(lp => !dbPlans.some(dp => String(dp.id) === String(lp.id)));
+                        allPlans = [...dbPlans, ...localOnly];
+                    } else {
+                        allPlans = JSON.parse(localStorage.getItem('smj_local_plans') || '[]');
                     }
                 } catch(e) {
                     allPlans = JSON.parse(localStorage.getItem('smj_local_plans') || '[]');
@@ -1398,25 +1404,39 @@ document.addEventListener('DOMContentLoaded', async () => {
                         body: JSON.stringify(payload)
                     });
                     const text = await res.text();
+                    let savedToDb = false;
+                    let errMsg = '';
                     try {
                         const data = JSON.parse(text);
-                        if (data.status !== 'success') throw new Error(data.message);
-                    } catch(err) {
-                        // local fallback
+                        if (data.status === 'success') {
+                            savedToDb = true;
+                        } else {
+                            errMsg = data.message || 'Database error. Saving locally.';
+                        }
+                    } catch(parseErr) {
+                        errMsg = 'Unexpected server response. Saving locally.';
+                    }
+
+                    if (!savedToDb) {
+                        // Fallback: save to localStorage so plan still appears in table
                         const localP = JSON.parse(localStorage.getItem('smj_local_plans') || '[]');
                         if (planToEditId) {
                             const idx = localP.findIndex(p => String(p.id) === String(planToEditId));
-                            if (idx >= 0) localP[idx] = payload;
+                            if (idx >= 0) localP[idx] = {...payload, id: planToEditId};
+                            else localP.push({...payload, id: planToEditId});
                         } else {
                             localP.push({...payload, id: Date.now()});
                         }
                         localStorage.setItem('smj_local_plans', JSON.stringify(localP));
+                        console.warn('Plan saved locally (DB error):', errMsg);
+                        window.showToaster ? window.showToaster('Plan saved locally. Note: ' + errMsg) : alert('Saved locally: ' + errMsg);
+                    } else {
+                        window.showToaster ? window.showToaster('Plan saved!') : alert('Plan saved');
                     }
-                    window.showToaster ? window.showToaster("Plan saved!") : alert("Plan saved");
                     planModal.classList.remove('show');
                     fetchPlans();
                 } catch(e) {
-                    window.showToaster ? window.showToaster("Failed to save plan", true) : alert("Error saving plan");
+                    window.showToaster ? window.showToaster('Failed to save plan: ' + e.message, true) : alert('Error saving plan');
                 }
                 savePlanBtn.classList.remove('loading');
             });
