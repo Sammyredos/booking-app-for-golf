@@ -1640,6 +1640,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Initialize Flatpickr for the modern calendar
         if (window.flatpickr && newBlockedDateInput) {
             flatpickr(newBlockedDateInput, {
+                mode: "range",
                 dateFormat: "Y-m-d",
                 disableMobile: "true",
                 minDate: "today"
@@ -1680,6 +1681,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             addBlockedDateBtn.addEventListener('click', async () => {
                 const val = newBlockedDateInput.value;
                 if (!val) return;
+                
+                let dates = [];
+                if (val.includes(' to ')) {
+                    const parts = val.split(' to ');
+                    const startStr = parts[0];
+                    const endStr = parts[1] || parts[0];
+                    
+                    let currentDate = new Date(startStr);
+                    const endDate = new Date(endStr);
+                    
+                    // Prevent infinite loops if parsing fails
+                    let safeGuard = 0;
+                    while (currentDate <= endDate && safeGuard < 365) {
+                        dates.push(currentDate.toISOString().split('T')[0]);
+                        currentDate.setDate(currentDate.getDate() + 1);
+                        safeGuard++;
+                    }
+                } else if (val.includes(',')) {
+                    dates = val.split(',').map(d => d.trim()).filter(d => d);
+                } else {
+                    dates = [val.trim()];
+                }
+
+                if (dates.length === 0) return;
 
                 try {
                     addBlockedDateBtn.textContent = 'Checking...';
@@ -1691,52 +1716,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     let bookingCount = 0;
                     if (data.status === 'success' && data.data) {
-                        const upcomingBookings = data.data.filter(b => b.booking_date === val && b.status === 'upcoming');
+                        const upcomingBookings = data.data.filter(b => dates.includes(b.booking_date) && b.status === 'upcoming');
                         bookingCount = upcomingBookings.length;
                     }
 
                     if (bookingCount > 0) {
-                        const confirmBlock = await new Promise((resolve) => {
-                            const modal = document.getElementById('blockDateModal');
-                            const modalText = document.getElementById('blockDateModalText');
-                            const cancelBtn = document.getElementById('cancelBlockDateBtn');
-                            const confirmBtn = document.getElementById('confirmBlockDateBtn');
-
-                            if (!modal) {
-                                // Fallback if HTML wasn't updated
-                                resolve(confirm(`WARNING: There are ${bookingCount} active upcoming bookings on ${val}.\n\nAre you sure you want to block this date? Existing bookings will NOT be automatically canceled, but new golfers will be prevented from booking.`));
-                                return;
-                            }
-
-                            modalText.textContent = `There are ${bookingCount} active upcoming bookings on ${val}. Are you sure you want to block this date? Existing bookings will NOT be automatically canceled, but new golfers will be prevented from booking.`;
-                            modal.style.display = 'flex';
-
-                            const onCancel = () => {
-                                modal.style.display = 'none';
-                                cleanup();
-                                resolve(false);
-                            };
-
-                            const onConfirm = () => {
-                                modal.style.display = 'none';
-                                cleanup();
-                                resolve(true);
-                            };
-
-                            cancelBtn.addEventListener('click', onCancel);
-                            confirmBtn.addEventListener('click', onConfirm);
-
-                            function cleanup() {
-                                cancelBtn.removeEventListener('click', onCancel);
-                                confirmBtn.removeEventListener('click', onConfirm);
-                            }
-                        });
-
-                        if (!confirmBlock) {
-                            addBlockedDateBtn.textContent = 'Add Date';
-                            addBlockedDateBtn.disabled = false;
-                            return; // User canceled
-                        }
+                        const msg = `Cannot block: There are ${bookingCount} active booking(s) on the selected dates. Please cancel or reschedule them first.`;
+                        window.showToaster ? window.showToaster(msg, true) : alert(msg);
+                        
+                        addBlockedDateBtn.textContent = 'Add Date';
+                        addBlockedDateBtn.disabled = false;
+                        return; // Block rejection
                     }
                 } catch (e) {
                     console.warn('Could not check for existing bookings', e);
@@ -1745,8 +1735,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 addBlockedDateBtn.textContent = 'Add Date';
                 addBlockedDateBtn.disabled = false;
 
-                addBlockedDateToUI(val);
+                dates.forEach(dateStr => {
+                    addBlockedDateToUI(dateStr);
+                });
+                
                 newBlockedDateInput.value = '';
+                if (newBlockedDateInput._flatpickr) {
+                    newBlockedDateInput._flatpickr.clear();
+                }
             });
         }
     }

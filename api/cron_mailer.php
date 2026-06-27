@@ -121,7 +121,7 @@ foreach ($rows as $email) {
     $headers .= "Reply-To: " . SMTP_FROM . "\r\n";
 
     // Send email using native mail() function
-    $sent = mail($to, $subject, $message, $headers);
+    $sent = mail($to, $subject, $message, $headers, "-f " . SMTP_FROM);
 
     if ($sent) {
         $conn->query("UPDATE email_queue SET status = 'sent' WHERE id = $id");
