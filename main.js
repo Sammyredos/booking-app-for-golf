@@ -1005,6 +1005,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 isBlocked = true;
             }
 
+            // Closing Time Validation (Frontend Mirror)
+            if (!isBlocked && requiredMins < 1440) { // Exclude full-day plans
+                const scheduleEndMins = 16 * 60; // Default 16:00 closing time
+                if (slotEnd > scheduleEndMins) {
+                    isBlocked = true;
+                }
+            }
+
             if (!isBlocked) {
                 for (let range of blockedRanges) {
                     if (cStart < range.end && cEnd > range.start) {

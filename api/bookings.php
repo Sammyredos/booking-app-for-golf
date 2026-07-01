@@ -147,6 +147,24 @@ function timeToMins($timeStr) {
     return $h * 60 + $m;
 }
 
+function isWithinClosingTime($conn, $bookingTime, $planName) {
+    // Exclude 24 hour plans or full day plans (e.g. Outside Ikoyi)
+    $duration = getPlanDurationMins($planName);
+    if ($duration >= 1440) return true;
+
+    $stmt_settings = $conn->query("SELECT setting_value FROM app_settings WHERE setting_key = 'schedule_end'");
+    $scheduleEnd = '16:00'; // default
+    if ($stmt_settings && $row = $stmt_settings->fetch_assoc()) {
+        $scheduleEnd = $row['setting_value'];
+    }
+    
+    $startMins = timeToMins($bookingTime);
+    $endMins = $startMins + $duration;
+    $scheduleEndMins = timeToMins($scheduleEnd);
+
+    return $endMins <= $scheduleEndMins;
+}
+
 function checkOverlap($conn, $coachName, $bookingDate, $bookingTime, $planName, $excludeId = null) {
     $stmt = $conn->query("SELECT setting_key, setting_value FROM app_settings WHERE setting_key IN ('buffer_before', 'buffer_after')");
     $bufferBefore = 10;
@@ -269,6 +287,12 @@ switch ($method) {
             exit;
         }
 
+        // Closing Time Validation
+        if (!isWithinClosingTime($conn, $data['booking_time'], $data['plan_name'])) {
+            echo json_encode(["status" => "error", "message" => "Booking time extends past the facility closing hours."]);
+            exit;
+        }
+
         // Payment Verification
         $stmt_settings = $conn->query("SELECT setting_key, setting_value FROM app_settings WHERE setting_key IN ('paystack_enabled', 'paystack_secret_key', 'cash_enabled')");
         $settings = [];
@@ -376,6 +400,11 @@ switch ($method) {
                 exit;
             }
 
+            if (!isWithinClosingTime($conn, $data['booking_time'], $data['plan_name'])) {
+                echo json_encode(["status" => "error", "message" => "Booking time extends past the facility closing hours."]);
+                exit;
+            }
+
             $stmt = $conn->prepare("UPDATE bookings SET user_name = ?, coach_name = ?, plan_name = ?, booking_date = ?, booking_time = ?, status = ? WHERE id = ?");
             $stmt->bind_param("ssssssi", $data['user_name'], $data['coach_name'], $data['plan_name'], $data['booking_date'], $data['booking_time'], $data['status'], $data['id']);
             if ($stmt->execute()) {
@@ -400,6 +429,12 @@ switch ($method) {
             if ($row = $res->fetch_assoc()) {
                 if (checkOverlap($conn, $row['coach_name'], $data['booking_date'], $data['booking_time'], $row['plan_name'], $data['id'])) {
                     echo json_encode(["status" => "error", "message" => "Time slot unavailable. The coach is already booked for this time."]);
+                    $stmt_get->close();
+                    exit;
+                }
+                
+                if (!isWithinClosingTime($conn, $data['booking_time'], $row['plan_name'])) {
+                    echo json_encode(["status" => "error", "message" => "Booking time extends past the facility closing hours."]);
                     $stmt_get->close();
                     exit;
                 }
