@@ -114,6 +114,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `${displayH}:${m.toString().padStart(2, '0')} ${ampm}`;
     }
 
+    function parseTimeStr(timeStr) {
+        if (!timeStr) return 9 * 60;
+        let timeParts = timeStr.trim().split(' ');
+        let [hours, minutes] = timeParts[0].split(':').map(Number);
+        let modifier = timeParts[1] ? timeParts[1].toUpperCase() : null;
+        
+        if (modifier === 'PM' && hours < 12) hours += 12;
+        if (modifier === 'AM' && hours === 12) hours = 0;
+        
+        return (hours || 0) * 60 + (minutes || 0);
+    }
+
     function getColorForPlan(planName) {
         if (!planName) return '#000';
         const name = planName.toLowerCase();
@@ -679,16 +691,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         maxEnd = Math.ceil(maxEnd / 60) * 60;
 
         let html = '<div class="time-axis"><div style="position: relative; margin-top: 20px;">';
-        for (let t = minStart; t <= maxEnd; t += 60) {
-            const pxOffset = t - minStart;
-            html += `<div class="time-label" style="top: ${pxOffset}px;">${formatTimeForSlot(t)}</div>`;
+        for (let t = minStart; t <= maxEnd; t += 30) {
+            const pxOffset = (t - minStart) * 2;
+            const isHour = (t % 60 === 0);
+            const fontStyle = isHour ? 'font-weight: 600; color: var(--text-dark); cursor: pointer;' : 'font-size: 0.75rem; color: #999; cursor: pointer;';
+            html += `<div class="time-label" style="top: ${pxOffset}px; ${fontStyle}" data-time="${formatTimeForSlot(t)}">${formatTimeForSlot(t)}</div>`;
         }
         html += '</div></div><div class="calendar-grid-wrapper"><div class="calendar-inner-grid" id="calendarGridContent">';
 
         // Render Dashed Slots (every 30 mins)
         for (let t = minStart; t < maxEnd; t += 30) {
-            const pxOffset = t - minStart;
-            html += `<div class="calendar-slot" style="top: ${pxOffset}px; height: 30px;" data-time="${formatTimeForSlot(t)}"></div>`;
+            const pxOffset = (t - minStart) * 2;
+            html += `<div class="calendar-slot" style="top: ${pxOffset}px; height: 60px;" data-time="${formatTimeForSlot(t)}"></div>`;
         }
 
         html += '</div></div>';
@@ -722,8 +736,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const width = 100 / overlapCount;
             const left = width * overlapIndex;
-            const top = startMins - minStart;
-            const height = duration;
+            const top = (startMins - minStart) * 2;
+            const height = duration * 2;
 
             const el = document.createElement('div');
             el.className = 'calendar-event';
@@ -747,9 +761,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // Slot click listeners
-        document.querySelectorAll('.calendar-slot').forEach(slot => {
+        document.querySelectorAll('.calendar-slot, .time-label').forEach(slot => {
             slot.addEventListener('click', (e) => {
-                const time = e.target.dataset.time;
+                const time = e.target.dataset.time || e.currentTarget.dataset.time;
+                const dateStr = currentCalendarDate.toLocaleDateString('en-CA');
                 const newModal = document.getElementById('newBookingModal');
                 if (newModal) {
                     newModal.classList.add('show');

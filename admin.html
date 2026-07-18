@@ -517,13 +517,21 @@
             margin-top: 20px;
             margin-bottom: 20px;
             height: calc(100% - 40px);
-            background: repeating-linear-gradient(
-                to bottom,
-                transparent,
-                transparent 59px,
-                #e5e7eb 59px,
-                #e5e7eb 60px
-            );
+            background: 
+                repeating-linear-gradient(
+                    to bottom,
+                    transparent,
+                    transparent 119px,
+                    #ccc 119px,
+                    #ccc 120px
+                ),
+                repeating-linear-gradient(
+                    to bottom,
+                    transparent,
+                    transparent 59px,
+                    #f0f0f0 59px,
+                    #f0f0f0 60px
+                );
         }
         /* Dashed slots for clicking to add */
         .calendar-slot {
@@ -721,6 +729,159 @@
                     </div>
                 </div>
             </main>
+        </div>
+    </div>
+
+    <!-- New Booking Modal -->
+    <style>
+        .dropdown-list li {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            font-weight: 500;
+        }
+        .dropdown-list li:last-child {
+            border-bottom: none;
+        }
+        .dropdown-list li:hover {
+            background: #cfff3d;
+            color: #000;
+        }
+    </style>
+    <div class="admin-modal-overlay" id="newBookingModal">
+        <div class="admin-modal">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;">New Booking</h2>
+                <button type="button" id="closeNewModalTopBtn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form id="newBookingForm">
+                <div class="form-group" style="position: relative;">
+                    <label for="newGolferSearch">Golfer Name</label>
+                    <input type="text" id="newGolferSearch" class="form-control" placeholder="Search for a golfer..." autocomplete="off" required>
+                    <input type="hidden" id="newGolferId" required>
+                    <ul id="newGolferList" class="dropdown-list" style="display:none; position:absolute; top:100%; left:0; width:100%; background:white; border:3px solid var(--text-dark); max-height:200px; overflow-y:auto; z-index:1000; list-style:none; padding:0; margin:0;"></ul>
+                </div>
+                <div class="form-group">
+                    <label for="newPlanName">Plan Name</label>
+                    <select id="newPlanName" class="form-control" required>
+                        <option value="1 Hour Range Lesson">1 Hour Range Lesson</option>
+                        <option value="Nine Holes of Golfing">Nine Holes of Golfing</option>
+                        <option value="18 Holes of Golfing">18 Holes of Golfing</option>
+                        <option value="Booking Outside Ikoyi Club">Booking Outside Ikoyi Club</option>
+                        <option value="Kids Golf Lessons">Kids Golf Lessons</option>
+                        <option value="Drill for Advanced Golfer">Drill for Advanced Golfer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="newCoachName">Coach Name</label>
+                    <input type="text" id="newCoachName" class="form-control" value="Balogun Jacob Micheal" disabled style="opacity: 0.7; cursor: not-allowed; background: #eee;">
+                </div>
+                <div class="form-group">
+                    <label for="newDate">Booking Date</label>
+                    <input type="date" id="newDate" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="newTime">Booking Time</label>
+                    <select id="newTime" class="form-control" required>
+                        <option value="9:00 AM">9:00 AM</option>
+                        <option value="9:30 AM">9:30 AM</option>
+                        <option value="10:00 AM">10:00 AM</option>
+                        <option value="10:30 AM">10:30 AM</option>
+                        <option value="11:00 AM">11:00 AM</option>
+                        <option value="11:30 AM">11:30 AM</option>
+                        <option value="12:00 PM">12:00 PM</option>
+                        <option value="12:30 PM">12:30 PM</option>
+                        <option value="1:00 PM">1:00 PM</option>
+                        <option value="1:30 PM">1:30 PM</option>
+                        <option value="2:00 PM">2:00 PM</option>
+                        <option value="2:30 PM">2:30 PM</option>
+                        <option value="3:00 PM">3:00 PM</option>
+                        <option value="3:30 PM">3:30 PM</option>
+                        <option value="4:00 PM">4:00 PM</option>
+                        <option value="4:30 PM">4:30 PM</option>
+                        <option value="5:00 PM">5:00 PM</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" id="closeNewModalBtn" style="font-weight: 400;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveNewBtn" style="font-weight: 400;">Create Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Booking Modal -->
+    <div class="admin-modal-overlay" id="editBookingModal">
+        <div class="admin-modal">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;">Edit Booking</h2>
+                <button type="button" id="closeEditModalTopBtn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form id="editBookingForm">
+                <input type="hidden" id="editBookingId">
+                <div class="form-group">
+                    <label for="editGolferName">Golfer Name</label>
+                    <input type="text" id="editGolferName" class="form-control" disabled style="opacity: 0.7; cursor: not-allowed; background: #eee;">
+                </div>
+                <div class="form-group">
+                    <label for="editPlanName">Plan Name</label>
+                    <input type="text" id="editPlanName" class="form-control" disabled style="opacity: 0.7; cursor: not-allowed; background: #eee;">
+                </div>
+                <div class="form-group">
+                    <label for="editCoachName">Coach Name</label>
+                    <input type="text" id="editCoachName" class="form-control" disabled style="opacity: 0.7; cursor: not-allowed; background: #eee;">
+                </div>
+                <div class="form-group">
+                    <label for="editDate">Booking Date</label>
+                    <input type="date" id="editDate" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTime">Booking Time</label>
+                    <select id="editTime" class="form-control" required>
+                        <option value="9:00 AM">9:00 AM</option>
+                        <option value="9:30 AM">9:30 AM</option>
+                        <option value="10:00 AM">10:00 AM</option>
+                        <option value="10:30 AM">10:30 AM</option>
+                        <option value="11:00 AM">11:00 AM</option>
+                        <option value="11:30 AM">11:30 AM</option>
+                        <option value="12:00 PM">12:00 PM</option>
+                        <option value="12:30 PM">12:30 PM</option>
+                        <option value="1:00 PM">1:00 PM</option>
+                        <option value="1:30 PM">1:30 PM</option>
+                        <option value="2:00 PM">2:00 PM</option>
+                        <option value="2:30 PM">2:30 PM</option>
+                        <option value="3:00 PM">3:00 PM</option>
+                        <option value="3:30 PM">3:30 PM</option>
+                        <option value="4:00 PM">4:00 PM</option>
+                        <option value="4:30 PM">4:30 PM</option>
+                        <option value="5:00 PM">5:00 PM</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editStatus">Status</label>
+                    <select id="editStatus" class="form-control" required>
+                        <option value="upcoming">Upcoming</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" id="closeEditModalBtn" style="font-weight: 400;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveEditBtn" style="font-weight: 400;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="admin-modal-overlay" id="deleteConfirmModal">
+        <div class="admin-modal" style="max-width: 400px; text-align: center;">
+            <h2>Confirm Deletion</h2>
+            <p style="margin-bottom: 2rem; color: var(--text-gray);">Are you sure you want to delete this booking? This action cannot be undone.</p>
+            <div class="modal-actions" style="justify-content: center;">
+                <button type="button" class="btn btn-outline" id="cancelDeleteBtn" style="font-weight: 400;">Cancel</button>
+                <button type="button" class="btn delete-btn" id="confirmDeleteBtn" style="font-weight: 400; padding: 0.75rem 1.5rem; box-shadow: 4px 4px 0 var(--text-dark); border: 3px solid var(--text-dark);">Delete</button>
+            </div>
         </div>
     </div>
 
