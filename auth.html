@@ -557,10 +557,18 @@
                     btn.classList.add('loading');
                     try {
                         const code = document.getElementById('verifyCode').value;
-                        const completeSignUp = await window.Clerk.client.signUp.attemptEmailAddressVerification({ code });
+                        let completeResult;
+                        
+                        if (window.Clerk.client.signIn && window.Clerk.client.signIn.status === 'needs_first_factor') {
+                            completeResult = await window.Clerk.client.signIn.attemptFirstFactor({ strategy: 'email_code', code });
+                        } else if (window.Clerk.client.signIn && (window.Clerk.client.signIn.status === 'needs_client_trust' || window.Clerk.client.signIn.status === 'needs_second_factor')) {
+                            completeResult = await window.Clerk.client.signIn.attemptSecondFactor({ strategy: 'email_code', code });
+                        } else {
+                            completeResult = await window.Clerk.client.signUp.attemptEmailAddressVerification({ code });
+                        }
 
-                        if (completeSignUp.status === 'complete') {
-                            await window.Clerk.setActive({ session: completeSignUp.createdSessionId });
+                        if (completeResult.status === 'complete') {
+                            await window.Clerk.setActive({ session: completeResult.createdSessionId });
                             window.showToaster("Welcome to SMJ Golf Academy!");
                             setTimeout(() => { window.location.href = localStorage.getItem('smj_pending_booking') ? "index.html" : "lessons.html"; }, 1500);
                         } else {
@@ -593,10 +601,38 @@
                         if (result.status === 'complete') {
                             await window.Clerk.setActive({ session: result.createdSessionId });
                             window.showToaster("Logged in successfully!");
-                            setTimeout(() => { window.location.href = "lessons.html"; }, 1500);
+                            setTimeout(() => { window.location.href = localStorage.getItem('smj_pending_booking') ? "index.html" : "lessons.html"; }, 1500);
+                        } else if (result.status === 'needs_first_factor') {
+                            console.log("Sign in needs first factor", result);
+                            try {
+                                await window.Clerk.client.signIn.prepareFirstFactor({ strategy: 'email_code' });
+                                const verifyDisplay = document.getElementById('verifyEmailDisplay');
+                                if (verifyDisplay) verifyDisplay.textContent = identifier;
+                                showForm(verifyForm);
+                                window.showToaster("Verification code sent to email!");
+                            } catch (err) {
+                                console.error('Prepare first factor error:', err);
+                                window.showToaster(err.errors?.[0]?.message || "Failed to send verification code", true);
+                            }
+                        } else if (result.status === 'needs_client_trust' || result.status === 'needs_second_factor') {
+                            console.log("Sign in needs second factor / client trust", result);
+                            try {
+                                await window.Clerk.client.signIn.prepareSecondFactor({ strategy: 'email_code' });
+                                const verifyDisplay = document.getElementById('verifyEmailDisplay');
+                                if (verifyDisplay) verifyDisplay.textContent = identifier;
+                                showForm(verifyForm);
+                                window.showToaster("Device verification code sent to email!");
+                            } catch (err) {
+                                console.error('Prepare second factor error:', err);
+                                window.showToaster(err.errors?.[0]?.message || "Failed to send verification code", true);
+                            }
+                        } else {
+                            console.log("Sign in incomplete", result);
+                            window.showToaster("Login incomplete. Status: " + result.status, true);
                         }
                     } catch (err) {
-                        window.showToaster(err.errors?.[0]?.message || "Invalid email or password", true);
+                        console.error('Sign in error:', err);
+                        window.showToaster(err.errors?.[0]?.message || err.message || "Invalid email or password", true);
                     } finally {
                         btn.classList.remove('loading');
                     }
