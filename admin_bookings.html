@@ -500,6 +500,162 @@
                 transform: translate(-2px, -2px);
             }
         }
+        
+        /* Calendar View Styles */
+        .view-toggle-btn {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--text-dark);
+            background: #fff;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .view-toggle-btn.active {
+            background: var(--text-dark);
+            color: #fff;
+        }
+        .calendar-nav-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            background: #fff;
+            border: 4px solid var(--text-dark);
+            padding: 1rem;
+            box-shadow: 4px 4px 0 var(--text-dark);
+        }
+        .calendar-nav-btn {
+            background: var(--bg-light);
+            border: 2px solid var(--text-dark);
+            padding: 0.5rem 1rem;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .calendar-nav-btn:hover {
+            background: var(--accent);
+        }
+        .calendar-container {
+            display: flex;
+            border: 4px solid var(--text-dark);
+            background: #fff;
+            box-shadow: 8px 8px 0 var(--text-dark);
+            height: 600px;
+            overflow-y: auto;
+            position: relative;
+        }
+        .time-axis {
+            width: 80px;
+            flex-shrink: 0;
+            border-right: 2px solid var(--text-dark);
+            background: var(--bg-light);
+            position: relative;
+        }
+        .time-label {
+            position: absolute;
+            right: 10px;
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            transform: translateY(-50%);
+        }
+        .calendar-grid-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        .calendar-inner-grid {
+            position: relative;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            height: calc(100% - 40px);
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent,
+                transparent 59px,
+                #e5e7eb 59px,
+                #e5e7eb 60px
+            );
+        }
+        /* Dashed slots for clicking to add */
+        .calendar-slot {
+            position: absolute;
+            left: 0;
+            right: 0;
+            border: 1px dashed #ccc;
+            cursor: pointer;
+            transition: background 0.2s;
+            z-index: 1;
+        }
+        .calendar-slot:hover {
+            background: rgba(204, 255, 0, 0.1);
+        }
+        .calendar-event {
+            position: absolute;
+            border-radius: 4px;
+            padding: 0.5rem;
+            color: #fff;
+            font-size: 0.85rem;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+            overflow: hidden;
+            z-index: 10;
+            border: 2px solid rgba(0,0,0,0.1);
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .calendar-event:hover {
+            transform: translateY(-2px);
+            box-shadow: 4px 4px 8px rgba(0,0,0,0.3);
+            z-index: 20;
+        }
+        .calendar-event .event-title {
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .event-details {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            .calendar-nav-header {
+                flex-direction: column;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem;
+            }
+            .calendar-nav-header > div {
+                display: flex;
+                width: 100%;
+                justify-content: space-between;
+                align-items: center;
+            }
+            #calCurrentDateDisplay {
+                font-size: 0.85rem !important;
+                margin: 0 !important;
+                text-align: center;
+            }
+            .calendar-nav-btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+            }
+            .time-axis {
+                width: 60px !important;
+            }
+            .time-label {
+                font-size: 0.75rem !important;
+                right: 5px !important;
+            }
+            .calendar-event {
+                font-size: 0.75rem !important;
+                padding: 0.25rem !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -566,7 +722,13 @@
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h2 style="text-transform: uppercase; margin: 0; font-size: 1.5rem; font-weight: 400;">All Bookings</h2>
-                    <button class="btn btn-primary" id="openNewBookingModalBtn" style="font-weight: 400; font-size: 0.9rem; padding: 0.5rem 1rem;">NEW BOOKING</button>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <div class="view-toggle-group" style="display: flex;">
+                            <button id="viewToggleTable" class="view-toggle-btn active" style="border-radius: 4px 0 0 4px; border-right: none;">Table</button>
+                            <button id="viewToggleCalendar" class="view-toggle-btn" style="border-radius: 0 4px 4px 0;">Calendar</button>
+                        </div>
+                        <button class="btn btn-primary" id="openNewBookingModalBtn" style="font-weight: 400; font-size: 0.9rem; padding: 0.5rem 1rem;">NEW BOOKING</button>
+                    </div>
                 </div>
                 
                 <!-- Filters -->
@@ -586,7 +748,20 @@
                     </select>
                 </div>
 
-                <div class="bookings-table-wrapper">
+                <div id="calendarViewContainer" style="display: none;">
+                    <div class="calendar-nav-header">
+                        <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                            <button id="calPrevDay" class="calendar-nav-btn">&larr; Prev</button>
+                            <h3 id="calCurrentDateDisplay" style="margin: 0 0.5rem; font-weight: 500; font-size: 1rem; text-align: center;"></h3>
+                            <button id="calNextDay" class="calendar-nav-btn">Next &rarr;</button>
+                        </div>
+                    </div>
+                    <div class="calendar-container" id="dailyCalendarGrid">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+
+                <div class="bookings-table-wrapper" id="tableViewContainer">
                     <table class="bookings-table">
                         <thead>
                             <tr>

@@ -59,6 +59,73 @@ document.addEventListener('DOMContentLoaded', async () => {
     let searchQuery = '';
     let statusFilter = 'all';
 
+    // Calendar View State
+    let currentAdminView = 'calendar'; // 'table' or 'calendar'
+    let currentCalendarDate = new Date();
+
+    // Toggle logic
+    const viewToggleTable = document.getElementById('viewToggleTable');
+    const viewToggleCalendar = document.getElementById('viewToggleCalendar');
+    const tableViewContainer = document.getElementById('tableViewContainer');
+    const calendarViewContainer = document.getElementById('calendarViewContainer');
+    const adminFilters = document.querySelector('.admin-filters');
+
+    if (viewToggleTable && viewToggleCalendar) {
+        viewToggleTable.addEventListener('click', () => {
+            currentAdminView = 'table';
+            viewToggleTable.classList.add('active');
+            viewToggleCalendar.classList.remove('active');
+            if (tableViewContainer) tableViewContainer.style.display = 'block';
+            if (calendarViewContainer) calendarViewContainer.style.display = 'none';
+            if (adminFilters) adminFilters.style.display = 'flex';
+            renderAdminDashboard();
+        });
+        viewToggleCalendar.addEventListener('click', () => {
+            currentAdminView = 'calendar';
+            viewToggleCalendar.classList.add('active');
+            viewToggleTable.classList.remove('active');
+            if (tableViewContainer) tableViewContainer.style.display = 'none';
+            if (calendarViewContainer) calendarViewContainer.style.display = 'block';
+            if (adminFilters) adminFilters.style.display = 'none';
+            renderAdminDashboard();
+        });
+    }
+
+    const calPrevDay = document.getElementById('calPrevDay');
+    const calNextDay = document.getElementById('calNextDay');
+    if (calPrevDay) {
+        calPrevDay.addEventListener('click', () => {
+            currentCalendarDate.setDate(currentCalendarDate.getDate() - 1);
+            renderAdminDashboard();
+        });
+    }
+    if (calNextDay) {
+        calNextDay.addEventListener('click', () => {
+            currentCalendarDate.setDate(currentCalendarDate.getDate() + 1);
+            renderAdminDashboard();
+        });
+    }
+
+    function formatTimeForSlot(mins) {
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const displayH = h % 12 || 12;
+        return `${displayH}:${m.toString().padStart(2, '0')} ${ampm}`;
+    }
+
+    function getColorForPlan(planName) {
+        if (!planName) return '#000';
+        const name = planName.toLowerCase();
+        if (name.includes('beginner')) return '#3b82f6'; // Blue
+        if (name.includes('range')) return '#a855f7'; // Purple
+        if (name.includes('9 hole') || name.includes('nine hole')) return '#22c55e'; // Green
+        if (name.includes('18 hole')) return '#eab308'; // Yellow
+        if (name.includes('simulator')) return '#ec4899'; // Pink
+        return '#000'; // Default black
+    }
+
+
     function parseDurationMins(planName) {
         if (!planName) return 60;
         const p = planName.toLowerCase();
@@ -587,12 +654,153 @@ document.addEventListener('DOMContentLoaded', async () => {
         return bookings;
     }
 
+    function renderCalendarView() {
+        const grid = document.getElementById('dailyCalendarGrid');
+        const dateDisplay = document.getElementById('calCurrentDateDisplay');
+        if (!grid || !dateDisplay) return;
+
+        dateDisplay.textContent = currentCalendarDate.toLocaleDateString('default', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+
+        const dateStr = currentCalendarDate.toLocaleDateString('en-CA');
+        const daysBookings = allBookings.filter(b => b.booking_date === dateStr && b.status !== 'cancelled');
+
+        let minStart = GLOBAL_SCHEDULE_START;
+        let maxEnd = GLOBAL_SCHEDULE_END;
+
+        daysBookings.forEach(booking => {
+            const startMins = parseTimeStr(booking.booking_time);
+            const endMins = startMins + parseDurationMins(booking.plan_name);
+            if (startMins < minStart) minStart = startMins;
+            if (endMins > maxEnd) maxEnd = endMins;
+        });
+
+        // Round to nearest hour bounds for a clean grid
+        minStart = Math.floor(minStart / 60) * 60;
+        maxEnd = Math.ceil(maxEnd / 60) * 60;
+
+        let html = '<div class="time-axis"><div style="position: relative; margin-top: 20px;">';
+        for (let t = minStart; t <= maxEnd; t += 60) {
+            const pxOffset = t - minStart;
+            html += `<div class="time-label" style="top: ${pxOffset}px;">${formatTimeForSlot(t)}</div>`;
+        }
+        html += '</div></div><div class="calendar-grid-wrapper"><div class="calendar-inner-grid" id="calendarGridContent">';
+
+        // Render Dashed Slots (every 30 mins)
+        for (let t = minStart; t < maxEnd; t += 30) {
+            const pxOffset = t - minStart;
+            html += `<div class="calendar-slot" style="top: ${pxOffset}px; height: 30px;" data-time="${formatTimeForSlot(t)}"></div>`;
+        }
+
+        html += '</div></div>';
+        grid.innerHTML = html;
+
+        const content = document.getElementById('calendarGridContent');
+
+        // Simple overlap logic: sort by start time, then check overlaps
+        daysBookings.sort((a, b) => parseTimeStr(a.booking_time) - parseTimeStr(b.booking_time));
+        
+        const placedEvents = [];
+
+        daysBookings.forEach(booking => {
+            const startMins = parseTimeStr(booking.booking_time);
+            const duration = parseDurationMins(booking.plan_name);
+            const endMins = startMins + duration;
+
+            let overlapCount = 0;
+            let overlapIndex = 0;
+
+            // Very naive collision check for layout (could be optimized)
+            const overlaps = daysBookings.filter(b => {
+                const bStart = parseTimeStr(b.booking_time);
+                const bEnd = bStart + parseDurationMins(b.plan_name);
+                return Math.max(startMins, bStart) < Math.min(endMins, bEnd);
+            });
+
+            overlapCount = overlaps.length || 1;
+            overlapIndex = overlaps.findIndex(b => b.id === booking.id);
+            if (overlapIndex === -1) overlapIndex = 0;
+
+            const width = 100 / overlapCount;
+            const left = width * overlapIndex;
+            const top = startMins - minStart;
+            const height = duration;
+
+            const el = document.createElement('div');
+            el.className = 'calendar-event';
+            el.style.top = `${top}px`;
+            el.style.height = `${height}px`;
+            el.style.width = `calc(${width}% - 10px)`;
+            el.style.left = `calc(${left}% + 5px)`;
+            el.style.backgroundColor = getColorForPlan(booking.plan_name);
+            el.innerHTML = `
+                <div class="event-title">${booking.user_name}</div>
+                <div class="event-details">${booking.plan_name}</div>
+                <div class="event-details">${booking.booking_time}</div>
+            `;
+            
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (typeof openEditModal === 'function') openEditModal(booking);
+            });
+
+            content.appendChild(el);
+        });
+
+        // Slot click listeners
+        document.querySelectorAll('.calendar-slot').forEach(slot => {
+            slot.addEventListener('click', (e) => {
+                const time = e.target.dataset.time;
+                const newModal = document.getElementById('newBookingModal');
+                if (newModal) {
+                    newModal.classList.add('show');
+                    document.getElementById('newDate').value = dateStr;
+                    // Trigger flatpickr onChange manually if possible, or just set value
+                    if (window.newDatePicker) window.newDatePicker.setDate(dateStr);
+                    setTimeout(() => {
+                        const timeSelect = document.getElementById('newTime');
+                        if (timeSelect) {
+                            timeSelect.value = time;
+                        }
+                    }, 100);
+                }
+            });
+        });
+    }
+
     function renderAdminDashboard() {
+        const isBookingsPage = document.getElementById('dailyCalendarGrid') !== null;
+
+        if (isBookingsPage) {
+            if (currentAdminView === 'calendar') {
+                if (tableViewContainer) tableViewContainer.style.display = 'none';
+                if (calendarViewContainer) calendarViewContainer.style.display = 'block';
+                if (adminFilters) adminFilters.style.display = 'none';
+                // Also default the buttons UI on load
+                const vTable = document.getElementById('viewToggleTable');
+                const vCal = document.getElementById('viewToggleCalendar');
+                if (vTable) vTable.classList.remove('active');
+                if (vCal) vCal.classList.add('active');
+                
+                renderCalendarView();
+            } else {
+                if (tableViewContainer) tableViewContainer.style.display = 'block';
+                if (calendarViewContainer) calendarViewContainer.style.display = 'none';
+                if (adminFilters) adminFilters.style.display = 'flex';
+                
+                const vTable = document.getElementById('viewToggleTable');
+                const vCal = document.getElementById('viewToggleCalendar');
+                if (vTable) vTable.classList.add('active');
+                if (vCal) vCal.classList.remove('active');
+            }
+        }
+
         const statTotal = document.getElementById('statTotal');
         if (statTotal) {
             statTotal.textContent = allBookings.length;
-            document.getElementById('statUpcoming').textContent = allBookings.filter(b => b.status === 'upcoming').length;
-            document.getElementById('statCompleted').textContent = allBookings.filter(b => b.status === 'completed').length;
+            const statUp = document.getElementById('statUpcoming');
+            const statComp = document.getElementById('statCompleted');
+            if (statUp) statUp.textContent = allBookings.filter(b => b.status === 'upcoming').length;
+            if (statComp) statComp.textContent = allBookings.filter(b => b.status === 'completed').length;
         }
 
         const tbody = document.getElementById('bookingsTableBody');
