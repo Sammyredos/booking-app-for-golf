@@ -476,10 +476,10 @@
             }
             .admin-nav-wrapper {
                 flex-direction: column;
-                align-items: center;
+                align-items: flex-start;
                 width: 100%;
                 gap: 1.5rem;
-                padding: 2rem 0;
+                padding: 1.5rem 0;
             }
             .admin-nav-wrapper .nav-link {
                 font-size: 1.25rem;
@@ -487,7 +487,7 @@
                 width: auto;
                 border-bottom: none;
                 color: var(--text-gray);
-                text-align: center;
+                text-align: left;
                 font-weight: 500;
                 transition: all 0.2s ease;
             }
@@ -836,8 +836,15 @@
                             <h2 style="margin-top: 0; margin-bottom: 1.5rem; text-transform: uppercase; font-weight: 400; border-bottom: 2px solid var(--text-dark); padding-bottom: 0.5rem;">Notification Preferences</h2>
                             
                             <div class="form-group">
-                                <label for="admin_email">Admin Email (Receives notifications)</label>
-                                <input type="email" id="admin_email" class="form-control" value="admin@smjgolf.com" required>
+                                <label for="coach_email">Coach Email (Coach Balogun Jacob Micheal - Receives New Appointment Alerts)</label>
+                                <input type="text" id="coach_email" class="form-control" placeholder="balogunsmj@gmail.com">
+                                <small style="display: block; margin-top: 0.35rem; color: var(--text-gray); font-size: 0.8rem;">Coach Balogun Jacob Micheal will receive an instant detailed email for every new booking, reschedule, and update.</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="admin_email">Additional Admin Email(s) (Optional notification recipients)</label>
+                                <input type="text" id="admin_email" class="form-control" placeholder="admin@smjgyhd.com.ng">
+                                <small style="display: block; margin-top: 0.35rem; color: var(--text-gray); font-size: 0.8rem;">Multiple email addresses can be separated by commas.</small>
                             </div>
                             
                             <div class="form-group">

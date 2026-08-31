@@ -994,92 +994,242 @@ document.addEventListener('DOMContentLoaded', async () => {
     const newBookingForm = document.getElementById('newBookingForm');
 
     let allClerkUsers = [];
+    let highlightedGolferIndex = -1;
+
+    function renderGolferDropdown(query = '') {
+        const listElement = document.getElementById('newGolferList');
+        const idInput = document.getElementById('newGolferId');
+
+        if (!listElement) return;
+
+        const q = (query || '').toLowerCase().trim();
+        const filtered = q === '' 
+            ? allClerkUsers 
+            : allClerkUsers.filter(u =>
+                (u.name && u.name.toLowerCase().includes(q)) ||
+                (u.email && u.email.toLowerCase().includes(q))
+            );
+
+        listElement.innerHTML = '';
+        highlightedGolferIndex = -1;
+
+        if (filtered.length === 0) {
+            const emptyLi = document.createElement('li');
+            emptyLi.style.padding = '1.25rem 1rem';
+            emptyLi.style.textAlign = 'center';
+            emptyLi.style.color = 'var(--text-gray)';
+            emptyLi.style.cursor = 'default';
+            emptyLi.innerHTML = `No golfers found matching "<strong>${q}</strong>"`;
+            listElement.appendChild(emptyLi);
+        } else {
+            filtered.forEach((u, index) => {
+                const li = document.createElement('li');
+                li.setAttribute('data-id', u.id);
+                li.setAttribute('data-index', index);
+
+                const isSelected = idInput && String(idInput.value) === String(u.id);
+                if (isSelected) {
+                    li.classList.add('selected-option');
+                }
+
+                li.innerHTML = `
+                    <span class="golfer-name">${u.name}</span>
+                    <span class="golfer-email">${u.email || 'No email'}</span>
+                `;
+
+                li.addEventListener('click', () => {
+                    selectGolfer(u);
+                });
+
+                listElement.appendChild(li);
+            });
+        }
+    }
+
+    function selectGolfer(u) {
+        const selectedText = document.getElementById('newGolferSelectedText');
+        const searchInput = document.getElementById('newGolferSearch');
+        const idInput = document.getElementById('newGolferId');
+        
+        if (selectedText) {
+            selectedText.textContent = u.name;
+            selectedText.style.color = 'var(--text-dark)';
+        }
+        if (searchInput) {
+            searchInput.value = u.name;
+        }
+        if (idInput) {
+            idInput.value = u.id;
+        }
+        closeGolferDropdown();
+    }
+
+    function openGolferDropdown() {
+        const dropdownPanel = document.getElementById('newGolferDropdown');
+        const toggleBtn = document.getElementById('newGolferToggleBtn');
+        const trigger = document.getElementById('newGolferSelectTrigger');
+        const searchTopInput = document.getElementById('newGolferSearchInput');
+
+        if (dropdownPanel) {
+            dropdownPanel.style.display = 'block';
+        }
+        if (toggleBtn) {
+            toggleBtn.style.transform = 'rotate(180deg)';
+        }
+        if (trigger) {
+            trigger.classList.add('active');
+        }
+        if (searchTopInput) {
+            renderGolferDropdown(searchTopInput.value || '');
+            setTimeout(() => searchTopInput.focus(), 50);
+        } else {
+            renderGolferDropdown('');
+        }
+    }
+
+    function closeGolferDropdown() {
+        const dropdownPanel = document.getElementById('newGolferDropdown');
+        const toggleBtn = document.getElementById('newGolferToggleBtn');
+        const trigger = document.getElementById('newGolferSelectTrigger');
+        
+        if (dropdownPanel) {
+            dropdownPanel.style.display = 'none';
+        }
+        if (toggleBtn) {
+            toggleBtn.style.transform = 'rotate(0deg)';
+        }
+        if (trigger) {
+            trigger.classList.remove('active');
+        }
+        highlightedGolferIndex = -1;
+    }
+
+    async function loadGolfersForSelect() {
+        if (window.globalClerkUsers && window.globalClerkUsers.length > 0) {
+            allClerkUsers = window.globalClerkUsers;
+        } else {
+            try {
+                const res = await window.apiFetch('api/users.php');
+                const data = await res.json();
+                if (data.status === 'success' && Array.isArray(data.data)) {
+                    window.globalClerkUsers = data.data;
+                    allClerkUsers = data.data;
+                }
+            } catch (e) {
+                console.warn('Could not fetch users for dropdown:', e);
+            }
+        }
+    }
+
+    // Trigger & Top Search Handlers
+    const golferSelectTrigger = document.getElementById('newGolferSelectTrigger');
+    const newGolferSearchInput = document.getElementById('newGolferSearchInput');
+
+    if (golferSelectTrigger) {
+        golferSelectTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dropdownPanel = document.getElementById('newGolferDropdown');
+            if (dropdownPanel && dropdownPanel.style.display === 'block') {
+                closeGolferDropdown();
+            } else {
+                openGolferDropdown();
+            }
+        });
+
+        golferSelectTrigger.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openGolferDropdown();
+            }
+        });
+    }
+
+    if (newGolferSearchInput) {
+        newGolferSearchInput.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        newGolferSearchInput.addEventListener('input', (e) => {
+            renderGolferDropdown(e.target.value);
+        });
+
+        newGolferSearchInput.addEventListener('keydown', (e) => {
+            const dropdownPanel = document.getElementById('newGolferDropdown');
+            const listElement = document.getElementById('newGolferList');
+            if (!dropdownPanel || dropdownPanel.style.display !== 'block' || !listElement) return;
+
+            const items = listElement.querySelectorAll('li[data-id]');
+            if (items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                highlightedGolferIndex = (highlightedGolferIndex + 1) % items.length;
+                updateHighlightedGolferItem(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                highlightedGolferIndex = (highlightedGolferIndex - 1 + items.length) % items.length;
+                updateHighlightedGolferItem(items);
+            } else if (e.key === 'Enter') {
+                if (highlightedGolferIndex >= 0 && items[highlightedGolferIndex]) {
+                    e.preventDefault();
+                    items[highlightedGolferIndex].click();
+                }
+            } else if (e.key === 'Escape') {
+                closeGolferDropdown();
+            }
+        });
+    }
+
+    function updateHighlightedGolferItem(items) {
+        items.forEach((item, idx) => {
+            if (idx === highlightedGolferIndex) {
+                item.classList.add('highlighted');
+                item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            } else {
+                item.classList.remove('highlighted');
+            }
+        });
+    }
+
+    // Close dropdown on click outside
+    document.addEventListener('click', (e) => {
+        const wrapper = document.getElementById('golferSelectWrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+            closeGolferDropdown();
+        }
+    });
 
     if (openNewModalBtn) {
         openNewModalBtn.addEventListener('click', async () => {
             if (newModal) newModal.classList.add('show');
-
+            const selectedText = document.getElementById('newGolferSelectedText');
             const searchInput = document.getElementById('newGolferSearch');
-            const listElement = document.getElementById('newGolferList');
+            const searchTopInput = document.getElementById('newGolferSearchInput');
             const idInput = document.getElementById('newGolferId');
 
-            if (searchInput && listElement) {
-                searchInput.value = 'Loading...';
-                searchInput.disabled = true;
-
-                if (window.globalClerkUsers && window.globalClerkUsers.length > 0) {
-                    allClerkUsers = window.globalClerkUsers;
-                    searchInput.value = '';
-                    searchInput.disabled = false;
-                    searchInput.placeholder = 'Search ' + allClerkUsers.length + ' registered golfers...';
-                } else {
-                    try {
-                        const res = await window.apiFetch('api/users.php');
-                        const data = await res.json();
-                        if (data.status === 'success') {
-                            window.globalClerkUsers = data.data;
-                            allClerkUsers = data.data;
-                            searchInput.value = '';
-                            searchInput.disabled = false;
-                            searchInput.placeholder = 'Search ' + allClerkUsers.length + ' registered golfers...';
-                        } else {
-                            searchInput.value = 'Failed to load users';
-                        }
-                    } catch (e) {
-                        searchInput.value = 'Error loading users';
-                    }
-                }
-
-                // Search filtering logic
-                searchInput.addEventListener('input', (e) => {
-                    const query = e.target.value.toLowerCase();
-                    listElement.innerHTML = '';
-
-                    if (query.trim() === '') {
-                        listElement.style.display = 'none';
-                        return;
-                    }
-
-                    const filtered = allClerkUsers.filter(u =>
-                        u.name.toLowerCase().includes(query) ||
-                        u.email.toLowerCase().includes(query)
-                    );
-
-                    if (filtered.length > 0) {
-                        filtered.forEach(u => {
-                            const li = document.createElement('li');
-                            li.textContent = `${u.name} (${u.email})`;
-                            li.addEventListener('click', () => {
-                                searchInput.value = u.name;
-                                idInput.value = u.id;
-                                listElement.style.display = 'none';
-                            });
-                            listElement.appendChild(li);
-                        });
-                        listElement.style.display = 'block';
-                    } else {
-                        listElement.style.display = 'none';
-                    }
-                });
-
-                // Hide list when clicking outside
-                document.addEventListener('click', (e) => {
-                    if (e.target !== searchInput && e.target !== listElement) {
-                        listElement.style.display = 'none';
-                    }
-                });
+            if (selectedText) {
+                selectedText.textContent = 'Select a golfer...';
+                selectedText.style.color = 'var(--text-gray)';
             }
+            if (searchInput) searchInput.value = '';
+            if (searchTopInput) searchTopInput.value = '';
+            if (idInput) idInput.value = '';
+
+            await loadGolfersForSelect();
+            renderGolferDropdown('');
         });
     }
 
     if (closeNewModalBtn) {
         closeNewModalBtn.addEventListener('click', () => {
             if (newModal) newModal.classList.remove('show');
+            closeGolferDropdown();
         });
     }
     if (closeNewModalTopBtn) {
         closeNewModalTopBtn.addEventListener('click', () => {
             if (newModal) newModal.classList.remove('show');
+            closeGolferDropdown();
         });
     }
 
@@ -1089,6 +1239,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const idInput = document.getElementById('newGolferId');
             const searchInput = document.getElementById('newGolferSearch');
+
+            if (!idInput.value && searchInput.value) {
+                const match = allClerkUsers.find(u => u.name.toLowerCase() === searchInput.value.toLowerCase().trim());
+                if (match) {
+                    idInput.value = match.id;
+                }
+            }
 
             if (!idInput.value) {
                 window.showToaster("Please select a golfer from the dropdown list.", true);
@@ -1121,6 +1278,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         if (newModal) newModal.classList.remove('show');
                         newBookingForm.reset();
                         idInput.value = '';
+                        const selectedText = document.getElementById('newGolferSelectedText');
+                        if (selectedText) {
+                            selectedText.textContent = 'Select a golfer...';
+                            selectedText.style.color = 'var(--text-gray)';
+                        }
                         fetchAdminBookings();
                     } else {
                         window.showToaster(data.message || "Failed to create booking", true);
@@ -1758,8 +1920,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (s.cash_enabled) document.getElementById('cash_enabled').checked = s.cash_enabled === 'true';
                     if (s.paystack_public_key) document.getElementById('paystack_public_key').value = s.paystack_public_key;
                     if (s.paystack_secret_key) document.getElementById('paystack_secret_key').placeholder = "********";
-                    if (s.admin_email) document.getElementById('admin_email').value = s.admin_email;
-                    if (s.email_automations) document.getElementById('email_automations').value = s.email_automations;
+                    if (s.coach_email && document.getElementById('coach_email')) document.getElementById('coach_email').value = s.coach_email;
+                    if (s.admin_email && document.getElementById('admin_email')) document.getElementById('admin_email').value = s.admin_email;
+                    if (s.email_automations && document.getElementById('email_automations')) document.getElementById('email_automations').value = s.email_automations;
                 }
             } catch (err) {
                 console.warn('Could not load settings from server, checking local storage.');
@@ -1781,8 +1944,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     if (s.cash_enabled) document.getElementById('cash_enabled').checked = s.cash_enabled === 'true';
                     if (s.paystack_public_key) document.getElementById('paystack_public_key').value = s.paystack_public_key;
-                    if (s.admin_email) document.getElementById('admin_email').value = s.admin_email;
-                    if (s.email_automations) document.getElementById('email_automations').value = s.email_automations;
+                    if (s.coach_email && document.getElementById('coach_email')) document.getElementById('coach_email').value = s.coach_email;
+                    if (s.admin_email && document.getElementById('admin_email')) document.getElementById('admin_email').value = s.admin_email;
+                    if (s.email_automations && document.getElementById('email_automations')) document.getElementById('email_automations').value = s.email_automations;
                 }
             }
         }
@@ -1821,8 +1985,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 paystack_enabled: document.getElementById('paystack_enabled').checked ? 'true' : 'false',
                 cash_enabled: document.getElementById('cash_enabled').checked ? 'true' : 'false',
                 paystack_public_key: document.getElementById('paystack_public_key').value,
-                admin_email: document.getElementById('admin_email').value,
-                email_automations: document.getElementById('email_automations').value
+                coach_email: document.getElementById('coach_email') ? document.getElementById('coach_email').value : '',
+                admin_email: document.getElementById('admin_email') ? document.getElementById('admin_email').value : '',
+                email_automations: document.getElementById('email_automations') ? document.getElementById('email_automations').value : 'true'
             };
 
             // Only update secret key if they typed a new one

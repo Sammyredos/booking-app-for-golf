@@ -503,6 +503,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch(e) {
                 plans = JSON.parse(localStorage.getItem('smj_local_plans') || '[]');
             }
+
+            if (!plans || plans.length === 0) {
+                plans = window.DEFAULT_SMJ_PLANS || [
+                    { id: 1, title: "1 Hour Range Lesson", category: "onetime", price: 25000, duration: "60 Minutes", is_premium: true, features: ["Full swing, chipping, and putting mechanics", "TrackMan radar & high-speed video feedback", "Personalized swing correction drill plan", "Range balls included"] },
+                    { id: 2, title: "9 Holes Playing Lesson", category: "onetime", price: 60000, duration: "2.5 Hours", is_premium: false, features: ["Real course management & shot selection", "Awkward lies, hazards, & trouble recovery", "Green reading and putting strategy", "Live tactical and psychological coaching"] },
+                    { id: 3, title: "18 Holes Playing Lesson", category: "onetime", price: 110000, duration: "5 Hours", is_premium: true, features: ["Comprehensive 18-hole tournament strategy", "Full stats analysis & strokes gained breakdown", "In-round nutrition & mental focus coaching", "Detailed post-round review and drill routine"] },
+                    { id: 4, title: "Simulator & TrackMan Analysis", category: "onetime", price: 35000, duration: "90 Minutes", is_premium: false, features: ["Launch angle, spin rate, & club path telemetry", "High-speed video clubhead delivery review", "Equipment & shaft optimization advice"] },
+                    { id: 5, title: "Outside Ikoyi Club Lesson", category: "onetime", price: 150000, duration: "Full Day", is_premium: true, features: ["Full day coaching at any preferred course", "Intensive swing and course management training", "Personalized long-term development roadmap"] },
+                    { id: 6, title: "Newbie 10-Session Foundation", category: "newbie", price: 200000, duration: "10 Sessions (60 mins each)", is_premium: true, features: ["Grip, posture, and core swing mechanics", "Short game: Chipping, pitching, and bunker play", "Putting stroke calibration and distance control", "Golf rules, course etiquette, and readiness test"] },
+                    { id: 7, title: "Newbie 5-Session Quickstart", category: "newbie", price: 110000, duration: "5 Sessions (60 mins each)", is_premium: false, features: ["Essential swing fundamentals & setup", "Solid ball striking & contact drills", "Basic chipping and putting instruction"] },
+                    { id: 8, title: "Monthly Performance Plan", category: "monthly", price: 180000, duration: "4 Weeks / 8 Sessions", is_premium: true, features: ["2 private coaching sessions per week", "Priority calendar reservation access", "Continuous TrackMan swing analytics", "Weekly tailored homework practice drills"] },
+                    { id: 9, title: "Kids Monthly Academy", category: "monthly", price: 130000, duration: "4 Weeks / 6 Sessions", is_premium: true, features: ["Fun, engaging junior golfing fundamentals", "Hand-eye coordination and balance games", "Junior equipment provided during sessions", "End-of-month skills assessment certificate"] },
+                    { id: 10, title: "Junior Individual Session", category: "kids", price: 20000, duration: "45 Minutes", is_premium: false, features: ["Age-appropriate swing basics", "Putting challenge games & fun drills", "Friendly coaching tailored for kids"] },
+                    { id: 11, title: "Kids 5-Session Package", category: "kids", price: 90000, duration: "5 Sessions (45 mins each)", is_premium: true, features: ["Complete junior fundamentals introduction", "Chipping, putting, and full swing games", "Junior golf rules and safety basics"] },
+                    { id: 12, title: "Range & Swing Mechanics", category: "newbie_session", price: 0, duration: "60 Minutes", is_premium: false, features: [] },
+                    { id: 13, title: "Putting & Chipping Drill", category: "newbie_session", price: 0, duration: "60 Minutes", is_premium: false, features: [] },
+                    { id: 14, title: "9 Holes Course Practice", category: "newbie_session", price: 0, duration: "2.5 Hours", is_premium: false, features: [] },
+                    { id: 15, title: "Junior Range Session", category: "kids_session", price: 0, duration: "45 Minutes", is_premium: false, features: [] },
+                    { id: 16, title: "Junior Short Game Drill", category: "kids_session", price: 0, duration: "45 Minutes", is_premium: false, features: [] },
+                    { id: 17, title: "Swing Video Analysis", category: "advanced_session", price: 0, duration: "60 Minutes", is_premium: false, features: [] },
+                    { id: 18, title: "9 Holes Strategic Play", category: "advanced_session", price: 0, duration: "2.5 Hours", is_premium: false, features: [] },
+                    { id: 19, title: "Short Game Mastery", category: "advanced_session", price: 0, duration: "60 Minutes", is_premium: false, features: [] }
+                ];
+                try {
+                    localStorage.setItem('smj_local_plans', JSON.stringify(plans));
+                } catch(e) {}
+            }
             
             let userLimits = {};
             if (window.Clerk && window.Clerk.user) {

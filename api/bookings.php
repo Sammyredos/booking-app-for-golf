@@ -17,9 +17,9 @@ $auth = verifyAuth();
 $serverUserId = $auth['user_id'];
 $serverIsAdmin = $auth['is_admin'];
 
-function queueEmailNotification($conn, $clerkSecret, $userId, $subject, $message) {
-    // Fetch settings for email routing
-    $settingsRes = $conn->query("SELECT setting_key, setting_value FROM app_settings WHERE setting_key IN ('email_automations', 'admin_email')");
+function queueEmailNotification($conn, $clerkSecret, $userId, $subject, $message, $bookingDetails = []) {
+    // 1. Fetch settings for email routing
+    $settingsRes = $conn->query("SELECT setting_key, setting_value FROM app_settings WHERE setting_key IN ('email_automations', 'admin_email', 'coach_email')");
     $settings = [];
     if ($settingsRes) {
         while($row = $settingsRes->fetch_assoc()) {
@@ -28,27 +28,41 @@ function queueEmailNotification($conn, $clerkSecret, $userId, $subject, $message
     }
     
     $emailAutomations = isset($settings['email_automations']) ? $settings['email_automations'] : 'true';
-    $adminEmail = isset($settings['admin_email']) ? $settings['admin_email'] : 'admin@smjgolf.com';
-
-    // Generate dynamic link based on current environment (localhost vs production)
-    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-    $domain = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'smjgolf.com';
     
-    // 1. Queue email for the Admin
-    if (!empty($adminEmail)) {
-        $adminMessage = $message . "\n\nManage this booking from the Admin Dashboard: " . $protocol . "://" . $domain . "/admin_bookings.html";
-        $adminSubj = "[Admin Alert] " . $subject;
-        $adminUserId = "admin_system";
-        $stmt = $conn->prepare("INSERT INTO email_queue (user_id, user_email, subject, message) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $adminUserId, $adminEmail, $adminSubj, $adminMessage);
-        $stmt->execute();
-        $stmt->close();
+    // Gather all admin and coach notification emails
+    $recipientEmails = [];
+    if (!empty($settings['coach_email'])) {
+        foreach (explode(',', $settings['coach_email']) as $em) {
+            $em = trim($em);
+            if (filter_var($em, FILTER_VALIDATE_EMAIL) && !in_array($em, $recipientEmails)) {
+                $recipientEmails[] = $em;
+            }
+        }
+    }
+    if (!empty($settings['admin_email'])) {
+        foreach (explode(',', $settings['admin_email']) as $em) {
+            $em = trim($em);
+            if (filter_var($em, FILTER_VALIDATE_EMAIL) && !in_array($em, $recipientEmails)) {
+                $recipientEmails[] = $em;
+            }
+        }
     }
 
-    // 2. Queue email for the Golfer (if automations are enabled)
-    if ($emailAutomations === 'true') {
-        $userMessage = $message . "\n\nYou can manage, reschedule, or cancel your bookings anytime from your dashboard at " . $protocol . "://" . $domain . "/lessons.html";
-        
+    // If no valid admin/coach email found in settings, use fallback
+    if (empty($recipientEmails)) {
+        $fallback = !empty($settings['admin_email']) ? $settings['admin_email'] : 'balogunsmj@gmail.com';
+        $recipientEmails[] = $fallback;
+    }
+
+    // Generate dynamic link based on current environment
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+    $domain = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'smjgyhd.com.ng';
+    
+    // Fetch Golfer Email and Name from Clerk if userId is provided
+    $userEmail = '';
+    $userName = isset($bookingDetails['user_name']) ? $bookingDetails['user_name'] : '';
+    
+    if (!empty($userId) && $userId !== 'admin_system' && $userId !== 'guest_user') {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, "https://api.clerk.com/v1/users/" . $userId);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -61,7 +75,9 @@ function queueEmailNotification($conn, $clerkSecret, $userId, $subject, $message
 
         if ($httpCode === 200) {
             $userData = json_decode($result, true);
-            $userEmail = '';
+            if (empty($userName)) {
+                $userName = trim(($userData['first_name'] ?? '') . ' ' . ($userData['last_name'] ?? ''));
+            }
             if (isset($userData['email_addresses']) && count($userData['email_addresses']) > 0) {
                 $primaryId = $userData['primary_email_address_id'] ?? null;
                 foreach ($userData['email_addresses'] as $emailObj) {
@@ -74,14 +90,45 @@ function queueEmailNotification($conn, $clerkSecret, $userId, $subject, $message
                     $userEmail = $userData['email_addresses'][0]['email_address'];
                 }
             }
-            
-            if (!empty($userEmail)) {
-                $stmt = $conn->prepare("INSERT INTO email_queue (user_id, user_email, subject, message) VALUES (?, ?, ?, ?)");
-                $stmt->bind_param("ssss", $userId, $userEmail, $subject, $userMessage);
-                $stmt->execute();
-                $stmt->close();
-            }
         }
+    }
+
+    if (empty($userEmail) && !empty($bookingDetails['user_email'])) {
+        $userEmail = $bookingDetails['user_email'];
+    }
+
+    // Build Coach / Admin Message
+    $adminSubj = "[Coach & Admin Alert] " . $subject;
+    $adminMessage = $message;
+    if (!empty($bookingDetails)) {
+        $adminMessage = "A golf appointment has been scheduled / updated with Coach Balogun Jacob Micheal.\n\n"
+            . "• Golfer Name: " . ($userName ?: ($bookingDetails['user_name'] ?? 'N/A')) . "\n"
+            . "• Golfer Email: " . ($userEmail ?: 'N/A') . "\n"
+            . "• Session / Plan: " . ($bookingDetails['plan_name'] ?? 'N/A') . "\n"
+            . "• Coach: " . ($bookingDetails['coach_name'] ?? 'Balogun Jacob Micheal') . "\n"
+            . "• Date: " . ($bookingDetails['booking_date'] ?? 'N/A') . "\n"
+            . "• Time: " . ($bookingDetails['booking_time'] ?? 'N/A') . "\n"
+            . (isset($bookingDetails['payment_method']) ? "• Payment Method: " . strtoupper($bookingDetails['payment_method']) . "\n" : "")
+            . (isset($bookingDetails['status']) ? "• Status: " . strtoupper($bookingDetails['status']) . "\n" : "");
+    }
+    $adminMessage .= "\n\nManage this appointment from the Admin Dashboard: " . $protocol . "://" . $domain . "/admin_bookings.html";
+
+    // 1. Queue email for all Coach & Admin recipients
+    foreach ($recipientEmails as $targetEmail) {
+        $adminUserId = "admin_system";
+        $stmt = $conn->prepare("INSERT INTO email_queue (user_id, user_email, subject, message) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $adminUserId, $targetEmail, $adminSubj, $adminMessage);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    // 2. Queue email for the Golfer (if automations are enabled and email is available)
+    if ($emailAutomations === 'true' && !empty($userEmail)) {
+        $userMessage = $message . "\n\nYou can manage, reschedule, or cancel your bookings anytime from your dashboard at " . $protocol . "://" . $domain . "/lessons.html";
+        $stmt = $conn->prepare("INSERT INTO email_queue (user_id, user_email, subject, message) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $userId, $userEmail, $subject, $userMessage);
+        $stmt->execute();
+        $stmt->close();
     }
 }
 
@@ -356,7 +403,7 @@ switch ($method) {
         
         if ($stmt->execute()) {
             $msg = "Your booking for {$data['plan_name']} on {$data['booking_date']} at {$data['booking_time']} has been successfully created and confirmed.";
-            queueEmailNotification($conn, $CLERK_SECRET_KEY, $data['user_id'], "Booking Confirmation", $msg);
+            queueEmailNotification($conn, $CLERK_SECRET_KEY, $data['user_id'], "New Booking Appointment", $msg, $data);
             
             echo json_encode(["status" => "success", "message" => "Booking created successfully.", "id" => $conn->insert_id]);
         } else {
@@ -409,7 +456,7 @@ switch ($method) {
             $stmt->bind_param("ssssssi", $data['user_name'], $data['coach_name'], $data['plan_name'], $data['booking_date'], $data['booking_time'], $data['status'], $data['id']);
             if ($stmt->execute()) {
                 $msg = "Your booking for {$data['plan_name']} has been updated by the admin to {$data['booking_date']} at {$data['booking_time']}. Status: {$data['status']}.";
-                queueEmailNotification($conn, $CLERK_SECRET_KEY, $currentBooking['user_id'], "Booking Update Notification", $msg);
+                queueEmailNotification($conn, $CLERK_SECRET_KEY, $currentBooking['user_id'], "Booking Update Notification", $msg, $data);
             }
         } else if (isset($data['booking_date']) && isset($data['booking_time'])) {
             // Reschedule Flow
@@ -445,7 +492,7 @@ switch ($method) {
             $stmt->bind_param("ssi", $data['booking_date'], $data['booking_time'], $data['id']);
             if ($stmt->execute()) {
                 $msg = "Your booking for {$currentBooking['plan_name']} has been rescheduled to {$data['booking_date']} at {$data['booking_time']}.";
-                queueEmailNotification($conn, $CLERK_SECRET_KEY, $currentBooking['user_id'], "Booking Rescheduled", $msg);
+                queueEmailNotification($conn, $CLERK_SECRET_KEY, $currentBooking['user_id'], "Booking Rescheduled", $msg, array_merge($currentBooking, $data));
             }
         } else if (isset($data['status'])) {
             // Admin Status Update Flow
@@ -453,18 +500,13 @@ switch ($method) {
             $stmt->bind_param("si", $data['status'], $data['id']);
             if ($stmt->execute()) {
                 $msg = "The status of your booking on {$currentBooking['booking_date']} at {$currentBooking['booking_time']} has been changed to: {$data['status']}.";
-                queueEmailNotification($conn, $CLERK_SECRET_KEY, $currentBooking['user_id'], "Booking Status Update", $msg);
+                queueEmailNotification($conn, $CLERK_SECRET_KEY, $currentBooking['user_id'], "Booking Status Update", $msg, array_merge($currentBooking, $data));
             }
         } else {
             echo json_encode(["status" => "error", "message" => "Nothing to update."]);
             exit;
         }
         
-        // Output response based on whether a statement was executed successfully
-        // We already executed the statement to get the email triggered, so we just check if $stmt is successful.
-        // Wait, the original code executed $stmt down below. Since I executed it early to trigger the email,
-        // I need to make sure I don't execute it twice.
-        // I will just return success here directly and exit.
         echo json_encode(["status" => "success", "message" => "Booking updated successfully."]);
         $stmt->close();
         break;
@@ -499,7 +541,7 @@ switch ($method) {
         if ($stmt->execute()) {
             if ($currentBooking) {
                 $msg = "Your booking for {$currentBooking['plan_name']} on {$currentBooking['booking_date']} has been CANCELLED and deleted by the administrator.";
-                queueEmailNotification($conn, $CLERK_SECRET_KEY, $currentBooking['user_id'], "Booking Cancelled", $msg);
+                queueEmailNotification($conn, $CLERK_SECRET_KEY, $currentBooking['user_id'], "Booking Cancelled", $msg, $currentBooking);
             }
             echo json_encode(["status" => "success", "message" => "Booking deleted successfully."]);
         } else {

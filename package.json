@@ -1,0 +1,13 @@
+{
+  "name": "smj-golf-booking-app",
+  "version": "1.0.0",
+  "description": "SMJ Golf Academy Booking Application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["golf", "booking", "academy"],
+  "author": "",
+  "license": "ISC"
+}
