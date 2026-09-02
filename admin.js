@@ -24,6 +24,27 @@ let GLOBAL_BUFFER_AFTER = 10;
 let GLOBAL_STANDARD_SLOTS = [9 * 60, 9 * 60 + 30, 10 * 60, 10 * 60 + 30, 11 * 60, 11 * 60 + 30, 12 * 60, 12 * 60 + 30, 13 * 60, 13 * 60 + 30, 14 * 60, 14 * 60 + 30, 15 * 60, 15 * 60 + 30, 16 * 60];
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Mobile Navigation Toggle
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileNav = document.getElementById('mobileNav');
+    if (hamburgerBtn && mobileNav) {
+        hamburgerBtn.onclick = (e) => {
+            e.stopPropagation();
+            mobileNav.classList.toggle('active');
+        };
+        const navLinks = mobileNav.querySelectorAll('a, button');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileNav.classList.remove('active');
+            });
+        });
+        document.addEventListener('click', (e) => {
+            if (mobileNav.classList.contains('active') && !mobileNav.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+                mobileNav.classList.remove('active');
+            }
+        });
+    }
+
     // Load Global Schedule Settings
     try {
         const res = await window.apiFetch('api/settings.php');

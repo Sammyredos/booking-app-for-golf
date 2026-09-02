@@ -18,6 +18,27 @@ window.apiFetch = async function(url, options = {}) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Mobile Navigation Toggle
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileNav = document.getElementById('mobileNav');
+    if (hamburgerBtn && mobileNav) {
+        hamburgerBtn.onclick = (e) => {
+            e.stopPropagation();
+            mobileNav.classList.toggle('active');
+        };
+        const navLinks = mobileNav.querySelectorAll('a, button');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileNav.classList.remove('active');
+            });
+        });
+        document.addEventListener('click', (e) => {
+            if (mobileNav.classList.contains('active') && !mobileNav.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+                mobileNav.classList.remove('active');
+            }
+        });
+    }
+
     let mockLessons = [];
 
     let ITEMS_PER_PAGE = 5;

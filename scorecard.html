@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SMJ Golf - Mobile Scorecard & Round Tracker</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="stylesheet" href="scorecard.css">
+</head>
+<body>
+
+  <!-- Mobile App Shell -->
+  <div class="app-shell">
+
+    <!-- =========================================================
+         PAGE 1: APP LANDING PAGE / HOME DASHBOARD
+         ========================================================= -->
+    <section class="view-panel active" id="view-home">
+      <!-- Top Brand Header -->
+      <header class="app-header">
+        <div class="app-header-left">
+          <div class="app-logo-circle">⛳</div>
+          <div>
+            <div class="app-header-title">SMJ GOLF</div>
+            <div class="app-header-subtitle">Welcome back, Player • HCP 4.8</div>
+          </div>
+        </div>
+        <button class="header-btn" aria-label="Profile">
+          <svg style="width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </button>
+      </header>
+
+      <div class="view-content">
+        <!-- Hero Launch Card -->
+        <div class="hero-card">
+          <span class="hero-tag">Ready to Tee Off?</span>
+          <h2 class="hero-title">Track Your Round in Real Time</h2>
+          <p class="hero-description">Enter scores hole-by-hole, analyze greens & fairways in regulation, and generate official PGA-format scorecards.</p>
+          <div class="hero-actions">
+            <button class="btn btn-white" onclick="switchView('setup')">
+              <svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="10 8 16 12 10 16 10 8"></polygon>
+              </svg>
+              Start New Round
+            </button>
+            <button class="btn btn-outline" style="color:#ffffff;border-color:rgba(255,255,255,0.4)" onclick="switchView('history')">
+              My History
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Round In-Progress Banner (Shows if round is active) -->
+        <div class="active-round-banner" id="activeRoundBanner" style="display: none;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="banner-pulse"></div>
+            <div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: var(--fairway-green); text-transform: uppercase;">Round In Progress</div>
+              <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary);" id="bannerCourseText">SMJ Championship Course</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);" id="bannerHoleText">Hole 4 • Score: -1</div>
+            </div>
+          </div>
+          <button class="btn btn-fairway" style="padding: 6px 14px; font-size: 0.85rem;">Resume →</button>
+        </div>
+
+        <!-- Player Career / Season Stats Glance -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon practice">📊</div>
+              <div>
+                <div class="card-title">Performance Snapshot</div>
+                <div class="card-subtitle">Last 20 Rounds Logged</div>
+              </div>
+            </div>
+          </div>
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-label">Avg Score</div>
+              <div class="kpi-value">73.2</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Best</div>
+              <div class="kpi-value" style="color:var(--fairway-green)">69</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">GIR</div>
+              <div class="kpi-value">67%</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Fairways</div>
+              <div class="kpi-value">71%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Rounds Feed -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon tournament">🏆</div>
+              <div>
+                <div class="card-title">Recent Scorecards</div>
+                <div class="card-subtitle">Tap any round to inspect hole details</div>
+              </div>
+            </div>
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--primary-green); cursor: pointer;" onclick="switchView('history')">View All</span>
+          </div>
+          <div id="homeRecentRounds" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         PAGE 2: START ROUND SETUP (TOURNAMENT VS PRACTICE)
+         ========================================================= -->
+    <section class="view-panel" id="view-setup">
+      <header class="app-header">
+        <div class="app-header-left">
+          <button class="header-btn" onclick="switchView('home')" aria-label="Back">
+            <svg style="width:22px;height:22px" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <div>
+            <div class="app-header-title">Start New Round</div>
+            <div class="app-header-subtitle">Configure your game settings</div>
+          </div>
+        </div>
+      </header>
+
+      <div class="view-content">
+        <!-- Tournament Setup Card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon tournament">🏆</div>
+              <div>
+                <div class="card-title">Tournament Round</div>
+                <div class="card-subtitle">Official Competition & Attestation</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">Scoring Format</div>
+            <div class="pill-grid">
+              <div class="pill-option active" data-setup-format="stroke">Stroke Play</div>
+              <div class="pill-option" data-setup-format="stableford">Stableford</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">Round Selector</div>
+            <div class="pill-grid">
+              <div class="pill-option active" data-setup-round="R1">R1 / 4</div>
+              <div class="pill-option" data-setup-round="R2">R2 / 4</div>
+              <div class="pill-option" data-setup-round="R3">R3 / 4</div>
+              <div class="pill-option" data-setup-round="R4">R4 / 4</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">Attester / Marker Name</div>
+            <input type="text" id="attesterInput" class="form-input" placeholder="e.g. David Miller (Playing Partner)">
+          </div>
+        </div>
+
+        <!-- Practice Options Card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon practice">🎯</div>
+              <div>
+                <div class="card-title">Round Length</div>
+                <div class="card-subtitle">Select number of holes</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="pill-grid">
+              <div class="pill-option" data-setup-holes="9">9 Holes</div>
+              <div class="pill-option active" data-setup-holes="18">18 Holes</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Course & Tee Selection Card -->
+        <div class="card">
+          <div class="form-group">
+            <div class="form-label">Select Course</div>
+            <select class="form-select" id="courseSelect">
+              <option value="championship">SMJ Championship Course (Par 72)</option>
+              <option value="links">Augusta National GC (Par 72)</option>
+              <option value="pines">Pine Valley Golf Club (Par 70)</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-top: 6px;">
+            <div class="form-label">Select Tee Box</div>
+            <div class="pill-grid">
+              <div class="tee-pill black" data-setup-tee="Black">Black</div>
+              <div class="tee-pill blue" data-setup-tee="Blue">Blue</div>
+              <div class="tee-pill white active" data-setup-tee="White">White</div>
+              <div class="tee-pill red" data-setup-tee="Red">Red</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="startRoundBtn" style="padding: 14px; font-size: 1.05rem;">
+          <svg style="width:20px;height:20px" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          Start Round
+        </button>
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         PAGE 3: ACTIVE HOLE-BY-HOLE SCORING INTERFACE
+         ========================================================= -->
+    <section class="view-panel" id="view-scoring">
+      <!-- Header with Course & Live Score relative to par -->
+      <header class="app-header">
+        <div class="app-header-left">
+          <button class="header-btn" onclick="switchView('home')" aria-label="Back">
+            <svg style="width:22px;height:22px" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <div>
+            <div class="app-header-title" id="scoringCourseTitle">SMJ Championship • R1</div>
+            <div class="app-header-subtitle">Live Scoring Mode</div>
+          </div>
+        </div>
+        <div class="header-score-pill" id="scoringHeaderScoreBadge">-1 (Thru 3)</div>
+      </header>
+
+      <div class="view-content">
+        <!-- Horizontal Hole Carousel Selector (Holes 1–18) -->
+        <div class="hole-carousel-container" id="holeCarousel">
+          <!-- Populated dynamically by JS -->
+        </div>
+
+        <!-- Hole Details Info Card -->
+        <div class="hole-details-card">
+          <div>
+            <div class="hole-badge-title" id="holeNumberTitle">Hole 4</div>
+            <div class="hole-specs-row">
+              <div class="spec-item">
+                <span class="spec-label">Par</span>
+                <span class="spec-val" id="holeParVal">Par 4</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Distance</span>
+                <span class="spec-val" id="holeYdsVal">410 Yds</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Index</span>
+                <span class="spec-val" id="holeSIVal">SI 1</span>
+              </div>
+            </div>
+          </div>
+          <div style="font-size: 2.2rem;">⛳</div>
+        </div>
+
+        <!-- Large Tactile Score Stepper Card -->
+        <div class="score-stepper-card">
+          <div class="stepper-row">
+            <button class="stepper-btn" id="scoreMinusBtn" aria-label="Subtract Stroke">−</button>
+            <div class="stepper-score-box">
+              <span class="stepper-score-number" id="stepperScoreDisplay">4</span>
+              <span class="stepper-score-badge badge-par" id="stepperBadgeDisplay">PAR (E)</span>
+            </div>
+            <button class="stepper-btn" id="scorePlusBtn" aria-label="Add Stroke">+</button>
+          </div>
+        </div>
+
+        <!-- In-Depth Shot Metrics Card -->
+        <div class="stat-selector-card">
+          <!-- Putts Row -->
+          <div class="stat-row">
+            <span class="stat-label-text">Putts</span>
+            <div class="pill-grid" style="flex: 1;">
+              <div class="pill-option" data-putt-val="1">1</div>
+              <div class="pill-option active" data-putt-val="2">2</div>
+              <div class="pill-option" data-putt-val="3">3</div>
+              <div class="pill-option" data-putt-val="4">4+</div>
+            </div>
+          </div>
+
+          <!-- Fairway Hit Row -->
+          <div class="stat-row" id="firRow">
+            <span class="stat-label-text">Fairway</span>
+            <div class="pill-grid" style="flex: 1;">
+              <div class="pill-option" data-fir-val="left">Left</div>
+              <div class="pill-option active" data-fir-val="center">Hit</div>
+              <div class="pill-option" data-fir-val="right">Right</div>
+            </div>
+          </div>
+
+          <!-- GIR Toggle Row -->
+          <div class="stat-row">
+            <span class="stat-label-text">GIR (Green)</span>
+            <div class="switch-container">
+              <label class="switch">
+                <input type="checkbox" id="girToggle" checked>
+                <span class="slider"></span>
+              </label>
+              <span style="font-size: 0.8rem; font-weight: 700; color: var(--fairway-green);">On Green</span>
+            </div>
+          </div>
+
+          <!-- Penalties Row -->
+          <div class="stat-row">
+            <span class="stat-label-text">Penalties</span>
+            <div class="mini-stepper">
+              <button class="mini-stepper-btn" id="penMinusBtn">−</button>
+              <span class="mini-stepper-val" id="penaltyValDisplay">0</span>
+              <button class="mini-stepper-btn" id="penPlusBtn">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Footer Controls -->
+        <div class="hole-nav-footer">
+          <button class="btn btn-outline" id="prevHoleBtn" style="flex: 1;">
+            <svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            Prev Hole
+          </button>
+          <button class="btn btn-fairway" id="nextHoleBtn" style="flex: 1;">
+            Next Hole
+            <svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         PAGE 4: HORIZONTAL 18-HOLE SCORECARD GRID & SUBMISSION
+         ========================================================= -->
+    <section class="view-panel" id="view-scorecard">
+      <header class="app-header">
+        <div class="app-header-left">
+          <button class="header-btn" onclick="switchView('scoring')" aria-label="Back">
+            <svg style="width:22px;height:22px" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <div>
+            <div class="app-header-title" id="scorecardTitle">SMJ Championship Course - Par 72</div>
+            <div class="app-header-subtitle">Official 18-Hole Scorecard Grid</div>
+          </div>
+        </div>
+      </header>
+
+      <div class="view-content">
+        <!-- Top 4 KPI Summary Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Score</div>
+            <div class="kpi-value" id="cardScoreVal">74 <span class="kpi-sub">(+2)</span></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">GIR</div>
+            <div class="kpi-value" id="cardGirVal">67%</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Fairways</div>
+            <div class="kpi-value" id="cardFirVal">71%</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Putts</div>
+            <div class="kpi-value" id="cardPuttsVal">29</div>
+          </div>
+        </div>
+
+        <!-- Legend for Official Golf Shapes -->
+        <div style="display: flex; justify-content: space-around; font-size: 0.75rem; color: var(--text-secondary); background: #ffffff; padding: 8px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <span class="score-badge-shape birdie" style="width:18px;height:18px;font-size:0.7rem;">3</span> Birdie
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <span class="score-badge-shape par" style="width:18px;height:18px;font-size:0.7rem;">4</span> Par
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <span class="score-badge-shape bogey" style="width:18px;height:18px;font-size:0.7rem;">5</span> Bogey
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <span class="score-badge-shape double-bogey" style="width:18px;height:18px;font-size:0.7rem;">6</span> 2+ Over
+          </span>
+        </div>
+
+        <!-- Front 9 Table -->
+        <div class="scorecard-table-card">
+          <div style="font-size: 0.8rem; font-weight: 800; color: var(--primary-green); margin-bottom: 6px; text-transform: uppercase;">
+            Front 9 (Holes 1–9)
+          </div>
+          <div id="f9ScoreTableContainer"></div>
+        </div>
+
+        <!-- Back 9 Table -->
+        <div class="scorecard-table-card" id="b9ScoreTableContainer">
+          <div style="font-size: 0.8rem; font-weight: 800; color: var(--primary-green); margin-bottom: 6px; text-transform: uppercase;">
+            Back 9 (Holes 10–18) & Total
+          </div>
+          <!-- Populated dynamically by JS -->
+        </div>
+
+        <!-- Official Attester Signature Card -->
+        <div class="signature-card">
+          <div class="card-header">
+            <span class="form-label" id="attesterDisplayLabel">Attester: Official Marker</span>
+            <button id="clearSigBtn" style="font-size: 0.75rem; color: var(--text-muted); background: transparent; border: none; cursor: pointer; text-decoration: underline;">Clear</button>
+          </div>
+          <div class="signature-canvas-wrapper">
+            <canvas class="signature-canvas" id="signatureCanvas"></canvas>
+            <span class="signature-placeholder" id="sigPlaceholder">Sign with finger or stylus here...</span>
+          </div>
+        </div>
+
+        <!-- Submit & Sign Action -->
+        <button class="btn btn-primary btn-block" id="submitScorecardBtn" style="padding: 14px; font-size: 1.05rem;">
+          <svg style="width:20px;height:20px" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          Submit & Sign Scorecard
+        </button>
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         PAGE 5: MY ROUNDS / TOURNAMENT & PRACTICE HISTORY
+         ========================================================= -->
+    <section class="view-panel" id="view-history">
+      <header class="app-header">
+        <div class="app-header-left">
+          <div>
+            <div class="app-header-title">My Rounds</div>
+            <div class="app-header-subtitle">Competition & Practice Records</div>
+          </div>
+        </div>
+      </header>
+
+      <div class="view-content">
+        <!-- Filter Tabs -->
+        <div class="filter-tab-bar">
+          <div class="filter-tab active" data-filter="all">All Rounds</div>
+          <div class="filter-tab" data-filter="tournament">Tournaments</div>
+          <div class="filter-tab" data-filter="practice">Practice</div>
+        </div>
+
+        <!-- Career Player Summary Card -->
+        <div class="history-summary-card">
+          <div class="summary-stat-box">
+            <div class="summary-stat-icon">⛳</div>
+            <div>
+              <div class="kpi-label">Scoring Avg</div>
+              <div class="kpi-value" style="font-size: 1.15rem;">73.2</div>
+            </div>
+          </div>
+          <div class="summary-stat-box">
+            <div class="summary-stat-icon">🎖️</div>
+            <div>
+              <div class="kpi-label">Best Round</div>
+              <div class="kpi-value" style="font-size: 1.15rem; color: var(--fairway-green);">69 (-3)</div>
+            </div>
+          </div>
+          <div class="summary-stat-box">
+            <div class="summary-stat-icon">📅</div>
+            <div>
+              <div class="kpi-label">Logged</div>
+              <div class="kpi-value" style="font-size: 1.15rem;">24 Rounds</div>
+            </div>
+          </div>
+          <div class="summary-stat-box">
+            <div class="summary-stat-icon">📈</div>
+            <div>
+              <div class="kpi-label">Handicap</div>
+              <div class="kpi-value" style="font-size: 1.15rem;">4.8 Index</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- List of Rounds Feed -->
+        <div id="historyRoundList" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         FIXED BOTTOM NAVIGATION DOCK
+         ========================================================= -->
+    <nav class="bottom-dock">
+      <button class="dock-item active" data-view="home" aria-label="Home">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Home</span>
+      </button>
+
+      <button class="dock-item" data-view="scoring" aria-label="Play / Score">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polygon points="10 8 16 12 10 16 10 8"></polygon>
+        </svg>
+        <span>Play</span>
+      </button>
+
+      <button class="dock-item" data-view="scorecard" aria-label="Scorecard">
+        <svg viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        <span>Scorecard</span>
+      </button>
+
+      <button class="dock-item" data-view="history" aria-label="History">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>History</span>
+      </button>
+    </nav>
+
+
+    <!-- =========================================================
+         SUBMISSION CONFIRMATION MODAL
+         ========================================================= -->
+    <div class="modal-overlay" id="completionModal">
+      <div class="modal-content">
+        <div class="modal-icon">🏆</div>
+        <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--primary-green);">Round Completed!</h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary);">Your scorecard and attestation have been recorded successfully.</p>
+        
+        <div style="background: var(--app-bg); border-radius: var(--radius-lg); padding: 16px; margin: 4px 0;">
+          <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Final Gross Score</div>
+          <div style="font-size: 2.5rem; font-weight: 900; color: var(--primary-green); line-height: 1.1;" id="modalScoreDisplay">74</div>
+          <div style="font-size: 0.95rem; font-weight: 700; color: var(--fairway-green);" id="modalToParDisplay">+2</div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 6px;" id="modalStatsSummary">
+            3 Birdies • 11 Pars • 4 Bogeys • 29 Putts
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="closeModalBtn">
+          View in History
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="scorecard.js"></script>
+</body>
+</html>

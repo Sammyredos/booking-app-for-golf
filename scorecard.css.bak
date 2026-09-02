@@ -1,0 +1,1194 @@
+/* =========================================================
+   SMJ GOLF - MOBILE APP DESIGN SYSTEM & STYLESHEET
+   Inter Font | Tabular Numerals | Tournament Green Palette
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Brand Green Palette */
+  --primary-green: #14532d;      /* Deep tournament forest green */
+  --primary-green-dark: #0f3d21;
+  --fairway-green: #15803d;      /* Rich fairway green */
+  --accent-green: #22c55e;       /* Vibrant green highlight */
+  --green-light: #ecfdf5;        /* Subtle green tint */
+  --green-badge: #dcfce7;
+  
+  /* Golf Scoring Shapes & Colors */
+  --birdie-border: #16a34a;
+  --birdie-bg: #dcfce7;
+  --birdie-text: #15803d;
+  
+  --eagle-border: #059669;
+  --eagle-bg: #a7f3d0;
+  --eagle-text: #065f46;
+
+  --bogey-border: #334155;
+  --bogey-bg: #f1f5f9;
+  --bogey-text: #1e293b;
+
+  --double-border: #991b1b;
+  --double-bg: #fee2e2;
+  --double-text: #991b1b;
+
+  /* Neutrals & Structure */
+  --app-bg: #f8fafc;
+  --card-bg: #ffffff;
+  --border-subtle: #e2e8f0;
+  --border-medium: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  
+  /* Radii & Elevation */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-elevated: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-dock: 0 -4px 12px rgba(0, 0, 0, 0.05);
+
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --header-height: 64px;
+  --dock-height: 72px;
+}
+
+/* Reset & Box Sizing */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: #cbd5e1; /* Outer canvas for desktop centering */
+  color: var(--text-primary);
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
+/* Mobile Viewport Container (App Shell) */
+.app-shell {
+  width: 100%;
+  max-width: 440px;
+  min-height: 100vh;
+  background-color: var(--app-bg);
+  position: relative;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* Screen View Panels */
+.view-panel {
+  display: none;
+  flex-direction: column;
+  padding-bottom: calc(var(--dock-height) + 24px);
+  width: 100%;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.view-panel.active {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Top App Header */
+.app-header {
+  background-color: var(--primary-green);
+  color: #ffffff;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: var(--shadow-sm);
+}
+
+.app-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-logo-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+}
+
+.app-logo-circle {
+  width: 32px;
+  height: 32px;
+  background: #ffffff;
+  color: var(--primary-green);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.85rem;
+}
+
+.app-header-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.app-header-subtitle {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  font-weight: 400;
+}
+
+.header-score-pill {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.header-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+
+.header-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Main Content Container */
+.view-content {
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Card Components */
+.card {
+  background-color: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.card-icon.tournament {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.card-icon.practice {
+  background: var(--green-light);
+  color: var(--primary-green);
+}
+
+.card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.card-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Hero Launch Card */
+.hero-card {
+  background: linear-gradient(135deg, var(--primary-green), #1b6638);
+  color: #ffffff;
+  border-radius: var(--radius-xl);
+  padding: 22px 20px;
+  box-shadow: var(--shadow-elevated);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hero-tag {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.hero-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.hero-description {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* Active Round Resume Banner */
+.active-round-banner {
+  background: #ffffff;
+  border: 2px solid var(--accent-green);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.active-round-banner:active {
+  transform: scale(0.98);
+}
+
+.banner-pulse {
+  width: 10px;
+  height: 10px;
+  background: var(--accent-green);
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  animation: pulse-green 1.8s infinite;
+}
+
+@keyframes pulse-green {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* Button System */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: var(--primary-green);
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(20, 83, 45, 0.2);
+}
+
+.btn-primary:active {
+  background-color: var(--primary-green-dark);
+  transform: translateY(1px);
+}
+
+.btn-fairway {
+  background-color: var(--fairway-green);
+  color: #ffffff;
+}
+
+.btn-fairway:active {
+  background-color: var(--primary-green);
+}
+
+.btn-white {
+  background-color: #ffffff;
+  color: var(--primary-green);
+  font-weight: 700;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-medium);
+}
+
+.btn-outline:hover, .btn-outline:active {
+  background-color: var(--app-bg);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* Pill / Chip Toggle Selectors */
+.pill-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pill-option {
+  flex: 1;
+  min-width: 60px;
+  text-align: center;
+  padding: 8px 12px;
+  background: var(--app-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.pill-option:active {
+  transform: scale(0.97);
+}
+
+.pill-option.active {
+  background: var(--primary-green);
+  color: #ffffff;
+  border-color: var(--primary-green);
+  box-shadow: 0 2px 4px rgba(20, 83, 45, 0.15);
+}
+
+/* Tee Box Selection Chips */
+.tee-pill {
+  flex: 1;
+  padding: 8px 6px;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.15s;
+}
+
+.tee-pill.black { background: #0f172a; color: #ffffff; }
+.tee-pill.blue { background: #1e40af; color: #ffffff; }
+.tee-pill.white { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
+.tee-pill.red { background: #dc2626; color: #ffffff; }
+
+.tee-pill.active {
+  outline: 3px solid var(--primary-green);
+  outline-offset: 2px;
+  transform: translateY(-2px);
+}
+
+/* Form Inputs */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.form-input, .form-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.form-input:focus, .form-select:focus {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 3px rgba(20, 83, 45, 0.1);
+}
+
+/* =========================================================
+   PAGE 2: ACTIVE HOLE-BY-HOLE SCORING INTERFACE
+   ========================================================= */
+
+/* Horizontal Hole Carousel */
+.hole-carousel-container {
+  overflow-x: auto;
+  padding: 8px 0;
+  display: flex;
+  gap: 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hole-carousel-container::-webkit-scrollbar {
+  display: none;
+}
+
+.hole-carousel-item {
+  flex: 0 0 44px;
+  height: 50px;
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.hole-carousel-item .num {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.hole-carousel-item .score-indicator {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.hole-carousel-item.active {
+  background: var(--primary-green);
+  border-color: var(--primary-green);
+}
+
+.hole-carousel-item.active .num,
+.hole-carousel-item.active .score-indicator {
+  color: #ffffff;
+}
+
+/* Hole Details Card */
+.hole-details-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hole-badge-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.hole-specs-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.spec-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.spec-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.spec-val {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Tactile Score Stepper */
+.score-stepper-card {
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.stepper-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  width: 100%;
+}
+
+.stepper-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-lg);
+  background: var(--app-bg);
+  border: 1px solid var(--border-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.12s;
+  box-shadow: var(--shadow-sm);
+  user-select: none;
+}
+
+.stepper-btn:active {
+  background: #e2e8f0;
+  transform: scale(0.94);
+}
+
+.stepper-score-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+
+.stepper-score-number {
+  font-size: 3.2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.stepper-score-badge {
+  margin-top: 6px;
+  padding: 4px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-eagle {
+  background: var(--eagle-bg);
+  color: var(--eagle-text);
+  border: 1px solid var(--eagle-border);
+}
+
+.badge-birdie {
+  background: var(--birdie-bg);
+  color: var(--birdie-text);
+  border: 1px solid var(--birdie-border);
+}
+
+.badge-par {
+  background: #f1f5f9;
+  color: var(--text-secondary);
+}
+
+.badge-bogey {
+  background: var(--bogey-bg);
+  color: var(--bogey-text);
+  border: 1px solid var(--bogey-border);
+}
+
+.badge-double {
+  background: var(--double-bg);
+  color: var(--double-text);
+  border: 1px solid var(--double-border);
+}
+
+/* Stat Selector Grid */
+.stat-selector-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stat-label-text {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 85px;
+}
+
+/* Toggle Switch for GIR */
+.switch-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #cbd5e1;
+  transition: 0.2s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.2s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+input:checked + .slider {
+  background-color: var(--accent-green);
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* Small Stepper for Penalties */
+.mini-stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--app-bg);
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.mini-stepper-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  border: 1px solid var(--border-medium);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.mini-stepper-val {
+  font-weight: 700;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* Hole Navigation Bar */
+.hole-nav-footer {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* =========================================================
+   PAGE 3: HORIZONTAL 18-HOLE SCORECARD GRID
+   ========================================================= */
+
+/* KPI Summary Cards Grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.kpi-card {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 10px 6px;
+  text-align: center;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+.kpi-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.kpi-value {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+.kpi-sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--fairway-green);
+}
+
+/* Scorecard Table Wrapper */
+.scorecard-table-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 14px 8px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  overflow-x: auto;
+}
+
+.scorecard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  text-align: center;
+  table-layout: fixed;
+}
+
+.scorecard-table th, .scorecard-table td {
+  padding: 8px 1px;
+  border: 1px solid #f1f5f9;
+}
+
+.scorecard-table thead th {
+  background-color: var(--primary-green);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.scorecard-table thead th:first-child {
+  border-top-left-radius: var(--radius-sm);
+}
+
+.scorecard-table thead th:last-child {
+  border-top-right-radius: var(--radius-sm);
+}
+
+.scorecard-table .subtotal-col {
+  background: #f8fafc;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.scorecard-table .row-header {
+  font-weight: 700;
+  text-align: left;
+  padding-left: 6px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  background: #f8fafc;
+}
+
+/* Authentic Golf Score Shapes in Grid */
+.score-cell {
+  position: relative;
+  font-weight: 700;
+  height: 34px;
+  vertical-align: middle;
+}
+
+.score-badge-shape {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+/* Birdie: Single Green Circle */
+.score-badge-shape.birdie {
+  border: 2px solid var(--birdie-border);
+  border-radius: 50%;
+  background: var(--birdie-bg);
+  color: var(--birdie-text);
+}
+
+/* Eagle: Double Circle */
+.score-badge-shape.eagle {
+  border: 2px solid var(--eagle-border);
+  border-radius: 50%;
+  background: var(--eagle-bg);
+  color: var(--eagle-text);
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 3.5px var(--eagle-border);
+}
+
+/* Bogey: Single Dark Square */
+.score-badge-shape.bogey {
+  border: 2px solid var(--bogey-border);
+  border-radius: 3px;
+  background: var(--bogey-bg);
+  color: var(--bogey-text);
+}
+
+/* Double Bogey: Double Square */
+.score-badge-shape.double-bogey {
+  border: 2px solid var(--double-border);
+  border-radius: 3px;
+  background: var(--double-bg);
+  color: var(--double-text);
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 3.5px var(--double-border);
+}
+
+/* Par: Clean plain number */
+.score-badge-shape.par {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Attester Digital Signature Card */
+.signature-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.signature-canvas-wrapper {
+  background: #fafafa;
+  border: 1.5px dashed var(--border-medium);
+  border-radius: var(--radius-md);
+  position: relative;
+  height: 90px;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.signature-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.signature-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  font-style: italic;
+}
+
+.signature-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* =========================================================
+   PAGE 4: ROUND HISTORY & TOURNAMENT LOG
+   ========================================================= */
+
+.filter-tab-bar {
+  display: flex;
+  background: #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 3px;
+}
+
+.filter-tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-radius: calc(var(--radius-md) - 3px);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filter-tab.active {
+  background: #ffffff;
+  color: var(--text-primary);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Player Scoring Summary Card */
+.history-summary-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.summary-stat-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.summary-stat-icon {
+  width: 38px;
+  height: 38px;
+  background: var(--green-light);
+  color: var(--primary-green);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+/* Round Feed Card */
+.round-feed-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.round-feed-card:active {
+  transform: scale(0.99);
+  background: #fafafa;
+}
+
+.round-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.round-event-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.round-event-sub {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.round-score-pill {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--primary-green);
+}
+
+.round-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  border-top: 1px solid #f1f5f9;
+  padding-top: 8px;
+}
+
+/* =========================================================
+   BOTTOM NAVIGATION DOCK
+   ========================================================= */
+
+.bottom-dock {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 440px;
+  height: var(--dock-height);
+  background: #ffffff;
+  border-top: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-dock);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 99;
+}
+
+.dock-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-family: var(--font-family);
+  font-size: 0.72rem;
+  font-weight: 600;
+  transition: color 0.15s;
+  padding: 6px 0;
+}
+
+.dock-item svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  transition: stroke 0.15s;
+}
+
+.dock-item.active {
+  color: var(--primary-green);
+  font-weight: 700;
+}
+
+.dock-item.active svg {
+  stroke: var(--primary-green);
+}
+
+/* Modal Popup Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay.active {
+  display: flex;
+  animation: fadeIn 0.18s ease-out;
+}
+
+.modal-content {
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  padding: 24px 20px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: var(--shadow-elevated);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
+
+.modal-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--green-light);
+  color: var(--primary-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  margin: 0 auto;
+}

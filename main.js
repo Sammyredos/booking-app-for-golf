@@ -18,6 +18,35 @@ window.apiFetch = async function(url, options = {}) {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Mobile Navigation Toggle
+    const initMobileNav = () => {
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const mobileNav = document.getElementById('mobileNav');
+        
+        if (hamburgerBtn && mobileNav) {
+            hamburgerBtn.onclick = (e) => {
+                e.stopPropagation();
+                mobileNav.classList.toggle('active');
+            };
+
+            // Close menu when clicking any nav link
+            const navLinks = mobileNav.querySelectorAll('a, button');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileNav.classList.remove('active');
+                });
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (mobileNav.classList.contains('active') && !mobileNav.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+                    mobileNav.classList.remove('active');
+                }
+            });
+        }
+    };
+    initMobileNav();
+
     // Global Settings
     window.SMJ_SETTINGS = {};
     try {
@@ -1232,24 +1261,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 submitToBackend(payload);
             }
         };
-    }
-
-    // Mobile Navigation Toggle
-    const hamburgerBtn = document.getElementById('hamburgerBtn');
-    const mobileNav = document.getElementById('mobileNav');
-    
-    if (hamburgerBtn && mobileNav) {
-        hamburgerBtn.addEventListener('click', () => {
-            mobileNav.classList.toggle('active');
-        });
-
-        // Close menu when clicking a link
-        const navLinks = mobileNav.querySelectorAll('a');
-        navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                mobileNav.classList.remove('active');
-            });
-        });
     }
 
     // Scroll Animation Observer

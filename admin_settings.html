@@ -474,30 +474,83 @@
             .admin-sidebar {
                 display: none !important;
             }
+            .hamburger {
+                display: block !important;
+            }
+            .nav {
+                display: none;
+                flex-direction: column;
+                align-items: flex-start;
+                position: absolute;
+                top: 80px;
+                left: 0;
+                width: 100%;
+                background-color: var(--card-bg, #ffffff);
+                border-bottom: 4px solid var(--text-dark);
+                padding: 2rem;
+                gap: 1.5rem;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                z-index: 99;
+                box-sizing: border-box;
+            }
+            .nav.active {
+                display: flex !important;
+            }
             .admin-nav-wrapper {
+                display: flex;
                 flex-direction: column;
                 align-items: flex-start;
                 width: 100%;
                 gap: 1.5rem;
-                padding: 1.5rem 0;
+                padding: 0;
             }
             .admin-nav-wrapper .nav-link {
-                font-size: 1.25rem;
-                padding: 0.75rem 1.5rem !important;
-                width: auto;
-                border-bottom: none;
-                color: var(--text-gray);
-                text-align: left;
+                font-size: 1rem;
                 font-weight: 500;
-                transition: all 0.2s ease;
+                color: var(--text-gray);
+                text-decoration: none;
+                text-align: left;
+                padding: 0 !important;
+                border: none !important;
+                background: transparent;
+                transition: color 0.2s ease;
+            }
+            .admin-nav-wrapper .nav-link:hover {
+                color: var(--text-dark);
             }
             .admin-nav-wrapper .nav-link.active {
-                background-color: var(--accent);
+                background-color: var(--accent, #cfff3d) !important;
                 color: var(--text-dark) !important;
                 border: 3px solid var(--text-dark) !important;
-                box-shadow: 4px 4px 0 var(--text-dark);
+                box-shadow: 4px 4px 0 var(--text-dark) !important;
+                font-size: 0.875rem;
                 font-weight: 700;
-                transform: translate(-2px, -2px);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                padding: 0.75rem 1.5rem !important;
+                width: auto;
+                display: inline-block;
+            }
+            .admin-mobile-logout-btn {
+                width: 100%;
+                text-align: center;
+                text-transform: uppercase;
+                font-size: 0.95rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                padding: 0.85rem 1.5rem;
+                border: 3px solid var(--text-dark);
+                background: #ffffff;
+                color: var(--text-dark);
+                text-decoration: none;
+                box-sizing: border-box;
+                margin-top: 0.5rem;
+                display: block;
+                transition: all 0.2s ease;
+            }
+            .admin-mobile-logout-btn:hover {
+                background: var(--text-dark);
+                color: #ffffff;
             }
         }
     </style>
@@ -514,7 +567,7 @@
             <div class="logo">
                 <a href="index.html"><img src="assets/logo.png" alt="SMJ GOLF Logo"></a>
             </div>
-            <nav class="nav" id="mobileNav" style="opacity: 0; transition: opacity 0.3s ease;">
+            <nav class="nav" id="mobileNav">
                 <!-- Admin Links inside a wrapper to prevent main.js from hiding them -->
                 <div class="admin-nav-wrapper">
                     <a href="admin.html" class="nav-link">Dashboard</a>
@@ -522,6 +575,7 @@
                     <a href="admin_plans.html" class="nav-link">Plans</a>
                     <a href="admin_clients.html" class="nav-link">Clients</a>
                     <a href="admin_settings.html" class="nav-link active">Settings</a>
+                    <a href="#" class="nav-logout-btn admin-mobile-logout-btn">Log Out</a>
                 </div>
                 
                 <div class="nav-auth-section" id="navAuthSection" style="opacity:0;">
